@@ -1,19 +1,15 @@
 spring:
-  flyway:
-    enabled: false
   application:
     name: kkbus
   datasource:
-    url: "jdbc:mysql://localhost:3306/kkbus?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false"
+    url: jdbc:mysql://localhost:3306/kkbus?createDatabaseIfNotExist=true
     username: root
     password: qwerty
   jpa:
     show-sql: true
-    hibernate:
-      ddl-auto: update
   jwt:
     secret: ${JWT_SECRET}
     accessTokenExpiration: 900
     refreshTokenExpiration: 604800
-server:
-  port: 8080
+  flyway:
+    enabled: false
