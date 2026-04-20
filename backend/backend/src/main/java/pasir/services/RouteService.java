@@ -30,4 +30,8 @@ public class RouteService {
         route.setDepartureTime(routeDto.getDepartureTime());
         return routeRepository.save(route);
     }
+
+    public List<Route> findAllByDestinationAndOrigin(String destination, String origin) {
+        return routeRepository.findByDestinationAndOrigin(destination, origin);
+    }
 }

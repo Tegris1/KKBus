@@ -60,3 +60,107 @@
     }
   }
 }
+
+.route-selector {
+  background-color: $background-color;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: $font-family;
+  max-width: 1000px;
+  margin: 32px auto;
+
+  h2 {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: $primary-color;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .search-form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    align-items: flex-end;
+
+    .form-group {
+      flex: 1;
+      min-width: 200px;
+
+      label {
+        font-weight: 600;
+        color: $text-color;
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+
+      select {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid color.adjust($background-color, $lightness: -20%);
+        border-radius: 5px;
+        background-color: color.scale($background-color, $lightness: 5%);
+        font-size: 1rem;
+        color: $text-color;
+
+        &:focus {
+          outline: none;
+          border-color: $primary-color;
+          box-shadow: 0 0 5px rgba($primary-color, 0.3);
+        }
+      }
+    }
+
+    button {
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      background-color: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+      min-width: 150px;
+
+      &:hover:not(:disabled) {
+        background-color: color.adjust($primary-color, $lightness: -10%);
+      }
+
+      &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+    }
+  }
+
+  .routes-container {
+    .loading,
+    .no-routes {
+      text-align: center;
+      font-size: 1.1rem;
+      color: $text-color;
+      padding: 2rem;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+    }
+
+    .loading {
+      color: $primary-color;
+      font-weight: bold;
+    }
+
+    .routes-list {
+      h3 {
+        font-size: 1.3rem;
+        color: $primary-color;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid $primary-color;
+        padding-bottom: 0.5rem;
+      }
+    }
+  }
+}

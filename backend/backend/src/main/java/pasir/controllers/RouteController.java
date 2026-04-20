@@ -11,7 +11,7 @@ import pasir.services.RouteService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/route")
+@RequestMapping("/api/route")
 public class RouteController {
     @Autowired
     private RouteService routeService;
@@ -28,5 +28,10 @@ public class RouteController {
     @GetMapping
     public ResponseEntity<List<Route>> getAllRoutes() {
         return ResponseEntity.ok(routeService.findAll());
+    }
+
+    @GetMapping(params = {"destination","origin"})
+    public ResponseEntity<List<Route>> getAllRoutesByDestinationAndOrigin(@Valid @RequestParam String destination, @Valid @RequestParam String origin) {
+        return ResponseEntity.ok(routeService.findAllByDestinationAndOrigin(destination, origin));
     }
 }
