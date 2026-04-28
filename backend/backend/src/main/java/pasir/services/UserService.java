@@ -1,5 +1,6 @@
 package pasir.services;
 
+import lombok.AllArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -8,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import pasir.Mappers.UserMapper;
 import pasir.Security.JwtUtil;
 import pasir.dtos.LoginDto;
 import pasir.dtos.UserDto;
@@ -19,6 +21,7 @@ import java.util.Collections;
 
 @NullMarked
 @Service
+@AllArgsConstructor
 public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -34,12 +37,7 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtil;
-
-    public UserService(UserRepository userRepository, PasswordEncoder encoder, JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.encoder = encoder;
-        this.jwtUtil = jwtUtil;
-    }
+    private final UserMapper userMapper;
 
     public User register(UserDto dto) {
         if(userRepository.findByEmail(dto.getEmail()).isPresent()){
@@ -61,5 +59,19 @@ public class UserService implements UserDetailsService {
         }
 
         return jwtUtil.generateToken(user.getEmail());
+    }
+
+    public User updateUserDetails(UserDto dto, String email) {
+        User oldUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono użytkownika"));
+        User newUser = userMapper.updateUser(dto, oldUser);
+        return userRepository.save(newUser);
+    }
+
+    public User updateUserDetails(UserDto dto, Long id) {
+        User oldUser = userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono użytkownika"));
+        User newUser = userMapper.updateUser(dto, oldUser);
+        return userRepository.save(newUser);
     }
 }
