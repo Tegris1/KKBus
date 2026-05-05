@@ -9,18 +9,24 @@ const Navbar: React.FC = () => {
   return (
     <nav className={styles.navbar}>
       <h1 className={styles.logo}>
-        <Link to="/">💰 Budget App</Link>
+        <Link to="/">KKBus</Link>
       </h1>
       <ul className={styles["nav-list"]}>
         <div className={styles["nav-container"]}>
           {isAuthenticated && (
             <>
               <li>
-                <Link to="/add-transaction">Dodaj Transakcję</Link>
+                <Link to="/add-transaction">Znajdź trasę</Link>
               </li>
               <li>
                 <Link to="/transactions">Lista Transakcji</Link>
               </li>
+                <li>
+                    <Link to="/my-tickets">Moje rezerwacje</Link>
+                </li>
+                <li>
+                    <Link to={"deposit"}>Depozyt</Link>
+                </li>
             </>
           )}
         </div>

@@ -4,11 +4,10 @@ import { Link } from "react-router-dom";
 const HomePage = () => {
   return (
     <div className={styles.home}>
-      <h1>Witaj w Budget App!</h1>
-      <p>Zarządzaj swoimi finansami łatwo i szybko. Twórz, edytuj i analizuj swoje transakcje.</p>
+      <h1>KKBus</h1>
+      <h3>Tu łączą się nasze drogi!</h3>
       <div className={styles.buttons}>
-        <Link to="/add-transaction" className={styles.btn}>Dodaj Transakcję</Link>
-        <Link to="/transactions" className={styles.btnSecondary}>Zobacz Listę</Link>
+        <Link to="/add-transaction" className={styles.btn}>Znajdź trasę</Link>
       </div>
     </div>
   );
