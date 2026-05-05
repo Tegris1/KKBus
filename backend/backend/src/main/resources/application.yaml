@@ -7,6 +7,14 @@ spring:
     password: qwerty
   jpa:
     show-sql: true
+
+#  jpa:
+#    show-sql: true
+#    hibernate:
+#      ddl-auto: update
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.MySQLDialect
   jwt:
     secret: ${JWT_SECRET}
     accessTokenExpiration: 900
