@@ -1,0 +1,79 @@
+.ticket-list-wrapper {
+  // Usuwamy 'margin: 2rem auto' i ustawiamy konkretne odstępy od góry i lewej strony
+  margin: 20px 0 0 20px;
+
+  // Zwiększamy max-width lub zmieniamy na 100%, aby wykorzystać dostępną przestrzeń od lewej
+  max-width: 100%;
+  padding: 10px;
+  font-family: 'Arial', sans-serif;
+
+  .list-actions {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: flex-start; // Wyrównanie przycisków filtrowania do lewej
+    gap: 10px;
+
+    button {
+      padding: 10px 20px;
+      border: 2px solid #003366; // Branding KKBus [1, 2]
+      background: white;
+      color: #003366;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &.active {
+        background: #003366;
+        color: white;
+      }
+    }
+  }
+
+  .items-grid {
+    display: grid;
+    // Automatyczne dopasowanie kolumn od lewej strony
+    grid-template-columns: repeat(auto-fill, minmax(280px, 280px));
+    gap: 20px;
+    justify-content: start; // Wymuszenie startu siatki od lewej krawędzi
+  }
+
+  .ticket-card {
+    border: 2px solid #003366;
+    border-radius: 0;
+    padding: 20px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: 1 / 1;
+    box-shadow: 4px 4px 0px rgba(0, 51, 102, 0.1);
+
+    .ticket-header {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+
+      .route-info {
+        font-weight: bold; // Pogrubione nazwy miast
+        font-size: 1.15rem;
+        color: #003366;
+      }
+    }
+
+    .ticket-details {
+      p strong {
+        font-weight: bold; // Pogrubione etykiety: data, miejsca, cena
+      }
+    }
+
+    // Pozostałe style statusów i przycisku bez zmian...
+    .cancel-btn {
+      margin-top: auto;
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  }
+}

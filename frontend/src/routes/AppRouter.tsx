@@ -1,10 +1,12 @@
-import React from "react";
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import TestApiComponent from "../components/TestApiComponent";
+
 import Navbar from "../components/Navbar/Navbar";
+import TicketsPage from "../pages/TicketPage/TicketsPage.tsx";
 import TransactionForm from "../components/TransactionForm/TransactionForm";
 import TransactionList from "../components/TransactionList/TransactionList";
 import RegisterPage from "../pages/RegisterPage/RegisterPage";
@@ -12,6 +14,7 @@ import LoginPage from "../pages/LoginPage/LoginPage";
 import HomePage from "../components/HomePage/HomePage";
 import PrivateRoute from "../components/Route/PrivateRoute";
 import PublicRoute from "../components/Route/PublicRoute";
+import DepositPage from "../pages/DepositPage/DepositPage.tsx";
 
 const App: React.FC = () => {
   return (
@@ -36,6 +39,22 @@ const App: React.FC = () => {
               </PrivateRoute>
             }
           />
+            <Route
+                path="/my-tickets"
+                element={
+                    <PrivateRoute>
+                        <TicketsPage />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/deposit"
+                element={
+                <PrivateRoute>
+                    <DepositPage />
+                </PrivateRoute>
+                }
+            />
           <Route path="/test" element={<TestApiComponent />} />
           <Route
             path="/register"
