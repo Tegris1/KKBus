@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { routesApi } from "../../api/routesApi";
 import { Route } from "../../types/route";
-import RouteBlock from "../RouteBlock/RouteBlock";
+import RouteBlock from "../../components/RouteBlock/RouteBlock";
 import styles from "./TransactionForm.module.scss";
 import { toast } from "react-toastify";
 

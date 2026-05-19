@@ -1,79 +1,159 @@
-.ticket-list-wrapper {
-  // Usuwamy 'margin: 2rem auto' i ustawiamy konkretne odstępy od góry i lewej strony
-  margin: 20px 0 0 20px;
+@use '../../styles/variables' as *;
+@use 'sass:color';
 
-  // Zwiększamy max-width lub zmieniamy na 100%, aby wykorzystać dostępną przestrzeń od lewej
-  max-width: 100%;
-  padding: 10px;
-  font-family: 'Arial', sans-serif;
-
-  .list-actions {
-    margin-bottom: 25px;
-    display: flex;
-    justify-content: flex-start; // Wyrównanie przycisków filtrowania do lewej
-    gap: 10px;
-
-    button {
-      padding: 10px 20px;
-      border: 2px solid #003366; // Branding KKBus [1, 2]
-      background: white;
-      color: #003366;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s;
-
-      &.active {
-        background: #003366;
-        color: white;
-      }
-    }
-  }
-
-  .items-grid {
-    display: grid;
-    // Automatyczne dopasowanie kolumn od lewej strony
-    grid-template-columns: repeat(auto-fill, minmax(280px, 280px));
-    gap: 20px;
-    justify-content: start; // Wymuszenie startu siatki od lewej krawędzi
-  }
-
-  .ticket-card {
-    border: 2px solid #003366;
-    border-radius: 0;
-    padding: 20px;
-    background: #ffffff;
+// Kontener na listę biletów
+.tickets-grid {
     display: flex;
     flex-direction: column;
-    aspect-ratio: 1 / 1;
-    box-shadow: 4px 4px 0px rgba(0, 51, 102, 0.1);
+    gap: 25px;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
 
+// Główna karta biletu
+.ticket-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 51, 102, 0.08);
+    border: 1px solid #f0f0f0;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.12);
+    }
+
+    // Nagłówek biletu (Trasa i Status)
     .ticket-header {
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
+        background-color: #fcfdfe;
+        padding: 20px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px dashed #eee; // Efekt odcięcia
 
-      .route-info {
-        font-weight: bold; // Pogrubione nazwy miast
-        font-size: 1.15rem;
-        color: #003366;
-      }
+        .route {
+            color: #003366;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+            
+            strong {
+                font-weight: 800;
+            }
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+        }
     }
 
-    .ticket-details {
-      p strong {
-        font-weight: bold; // Pogrubione etykiety: data, miejsca, cena
-      }
+    // Treść biletu
+    .ticket-body {
+        padding: 25px 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            color: #444;
+
+            strong {
+                color: #003366;
+                font-weight: 600;
+            }
+
+            .price {
+                font-size: 1.2rem;
+                font-weight: 800;
+                color: #003366;
+            }
+        }
     }
 
-    // Pozostałe style statusów i przycisku bez zmian...
+    // Przycisk anulowania (zgodnie z UC8)
     .cancel-btn {
-      margin-top: auto;
-      background: #dc3545;
-      color: white;
-      border: none;
-      padding: 10px;
-      font-weight: bold;
-      cursor: pointer;
+        margin: 0 30px 25px;
+        background-color: #fff;
+        color: #983838;
+        border: 2px solid #983838;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background-color: #983838;
+            color: #fff;
+        }
     }
-  }
+
+    // Specyficzne style dla statusów (Diagram stanu rezerwacji)
+    &.zakupiony {
+        border-left: 6px solid #2e7d32;
+        .status-badge { background: #e8f5e9; color: #2e7d32; }
+    }
+
+    &.ukończony {
+        border-left: 6px solid #003366;
+        opacity: 0.8;
+        .status-badge { background: #e3f2fd; color: #003366; }
+    }
+
+    &.anulowany {
+        border-left: 6px solid #983838;
+        filter: grayscale(0.5);
+        .status-badge { background: #ffebee; color: #983838; }
+    }
+
+    &.nowy {
+        border-left: 6px solid #ffa000;
+        .status-badge { background: #fff8e1; color: #ffa000; }
+    }
+
+    // Wizualna perforacja (boczne wcięcia)
+    .perforation {
+        position: absolute;
+        top: 65px; // Na wysokości linii dashed
+        width: 20px;
+        height: 20px;
+        background: #f4f7f9; // Kolor tła strony
+        border-radius: 50%;
+        
+        &:first-of-type { left: -10px; }
+        &:last-of-type { right: -10px; }
+    }
+}
+
+// Responsywność dla mobile
+@media (max-width: 600px) {
+    .tickets-grid {
+        padding: 10px;
+    }
+
+    .ticket-card {
+        .ticket-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-row {
+            flex-direction: column;
+            gap: 2px;
+        }
+    }
 }

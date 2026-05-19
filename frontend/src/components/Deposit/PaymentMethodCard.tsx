@@ -1,4 +1,4 @@
-import styles from "./Deposit.module.scss";
+import styles from "./DepositForm.module.scss";
 
 interface PaymentMethodProps {
     id: string;

@@ -1,0 +1,178 @@
+@use '../../styles/variables' as *;
+@use 'sass:color';
+
+.deposit-wrapper {
+  width: 100%;
+  max-width: 600px;
+  background: transparent;
+
+  .deposit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    // Sekcja wprowadzania kwoty
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      label {
+        font-size: 0.9rem;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .deposit-input {
+        width: 100%;
+        max-width: 250px;
+        font-size: 2.5rem; // Duża, czytelna kwota
+        font-weight: 800;
+        color: $primary-color;
+        border: none;
+        border-bottom: 3px solid #e0e0e0;
+        background: transparent;
+        padding: 10px 0;
+        outline: none;
+        transition: border-color 0.3s ease;
+
+        &:focus {
+          border-bottom-color: $primary-color; // Zmiana na kolor KKBus przy focusie
+        }
+
+        &::placeholder {
+          color: #ccc;
+        }
+
+        // Ukrycie strzałek dla input type number
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+      }
+    }
+
+    // Sekcja wyboru metod
+    .methods-section {
+      label {
+        display: block;
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .methods-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 15px;
+      }
+    }
+
+    // Nowoczesny przycisk akcji
+    .submit-btn {
+      background: $primary-color;
+      color: #fff;
+      border: none;
+      padding: 18px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 51, 102, 0.2);
+
+      &:hover {
+        background: $primary-color;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba($primary-color, 0.3);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+// Styl dla karty metody płatności (PaymentMethodCard)
+.method-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  background: #fff;
+  border: 2px solid #f0f0f0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .icon {
+    font-size: 2rem;
+    transition: transform 0.3s ease;
+  }
+
+  strong {
+    font-size: 0.9rem;
+    color: #444;
+  }
+
+  &:hover {
+    border-color: $primary-color;
+    background: rgba($primary-color, 0.02);
+    
+    .icon {
+      transform: scale(1.1);
+    }
+  }
+
+  // Stan zaznaczenia (selected)
+  &.selected {
+    border-color: $primary-color;
+    background: rgba($primary-color, 0.05);
+    box-shadow: 0 8px 20px rgba($primary-color, 0.1);
+
+    strong {
+      color: $primary-color;
+    }
+    
+    &::after {
+      content: '✓';
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: $primary-color;
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    position: relative;
+  }
+}
+
+// Responsywność dla urządzeń mobilnych 
+@media (max-width: 480px) {
+  .deposit-wrapper {
+    .deposit-form {
+      .deposit-input {
+        font-size: 2rem;
+        max-width: 100%;
+      }
+      
+      .methods-grid {
+        grid-template-columns: 1fr; // Jedna kolumna na telefonach
+      }
+    }
+  }
+}

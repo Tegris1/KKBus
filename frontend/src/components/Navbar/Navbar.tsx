@@ -18,15 +18,15 @@ const Navbar: React.FC = () => {
               <li>
                 <Link to="/add-transaction">Znajdź trasę</Link>
               </li>
-              <li>
-                <Link to="/transactions">Lista Transakcji</Link>
+                <li>
+                    <Link to="/my-tickets">Bilety</Link>
+                </li>
+                <li>
+                    <Link to={"deposit"}>Portfel</Link>
+                </li>
+                <li>
+                <Link to="/transactions">Historia</Link>
               </li>
-                <li>
-                    <Link to="/my-tickets">Moje rezerwacje</Link>
-                </li>
-                <li>
-                    <Link to={"deposit"}>Depozyt</Link>
-                </li>
             </>
           )}
         </div>
