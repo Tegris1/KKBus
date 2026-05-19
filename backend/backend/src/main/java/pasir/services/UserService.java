@@ -15,6 +15,7 @@ import pasir.dtos.LoginDto;
 import pasir.dtos.UserDto;
 import pasir.exceptions.UserAlreadyExistsException;
 import pasir.model.User;
+import pasir.model.Wallet;
 import pasir.repositories.UserRepository;
 
 import java.util.Collections;
@@ -47,6 +48,12 @@ public class UserService implements UserDetailsService {
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setPassword(encoder.encode(dto.getPassword()));
+        user.setPoints(0);
+
+        Wallet wallet = new Wallet();
+        wallet.setUser(user);
+        user.setWallet(wallet);
+
         return userRepository.save(user);
     }
 

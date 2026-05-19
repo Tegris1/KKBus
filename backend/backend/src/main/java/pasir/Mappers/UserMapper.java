@@ -1,6 +1,7 @@
 package pasir.Mappers;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
 import pasir.dtos.UserDto;
 import pasir.model.User;
 
@@ -8,6 +9,5 @@ import pasir.model.User;
 public interface UserMapper {
     User toEntity(UserDto dto);
     UserDto toDto(User user);
-    User updateUser(UserDto dto, User user);
-    User updateUser(UserDto dto, String email);
+    User updateUser(UserDto dto, @MappingTarget User user);
 }
