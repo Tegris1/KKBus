@@ -3,6 +3,7 @@ package pasir.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,6 +11,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "users")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
     @Id
@@ -30,4 +32,7 @@ public class User {
     private String currency = "PLN";
 
     private Integer Points;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Wallet wallet;
 }
