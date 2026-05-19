@@ -1,56 +1,111 @@
-/* src/pages/LoginPage/LoginPage.module.scss */
 @use '../../styles/variables.scss' as *;
 @use 'sass:color';
 
-.container {
-    max-width: 400px;
-    margin: 3rem auto;
-    padding: 2rem;
-    background-color: $background-color;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .title{
-    margin-bottom: 8px;
-  }
+// Główny wrapper dzielący ekran na pół
+.pageWrapper {
+    display: flex;
+    min-height: 100vh; 
+    width: 100%;
+}
 
-  .form {
+// Lewa sekcja na zdjęcie (np. autobusu KKBus na trasie Kraków-Katowice)
+.imageSection {
+    flex: 1.2;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+
+    // Opcjonalny filtr, aby zdjęcie lepiej pasowało do klimatu aplikacji
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba($primary-color, 0.2); 
+    }
+
+    @media (max-width: 768px) {
+        display: none; // Na telefonach ukrywamy zdjęcie dla wygody [2]
+    }
+}
+
+// Prawa sekcja z kontenerem logowania
+.loginSection {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: $box-color;
+}
+
+.container {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+}
+
+.title {
+    margin-bottom: 1rem;
+    color: $primary-color;
+    font-weight: bold;
+    text-align: left;
+}
+
+.form {
     display: flex;
     flex-direction: column;
-  }
-  
-  .formGroup {
-    margin-bottom: 1.5rem;
-  }
-  
-  .input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    margin-top: 0.5rem;
-    font-size: 1rem;
-  
-    &:focus {
-      border-color: $primary-color;
-      outline: none;
-      box-shadow: 0 0 5px rgba($primary-color, 0.5);
+}
+
+.formGroup {
+    margin-bottom: 2rem;
+    position: relative;
+    
+    label {
+        font-weight: bold;
+        font-size: 0.85rem;
+        color: #666;
+        text-transform: uppercase;
     }
-  }
-  
-  .button {
+}
+
+// Zmiana inputów: brak kanciastych kratek, tylko podkreślenie
+.input {
+    width: 100%;
+    padding: 0.5rem 0; // Usunięty padding boczny, by linia była równo z tekstem
+    border: none;
+    border-bottom: 2px solid #ccc; // Tylko dolna krawędź
+    border-radius: 0; // Całkowity brak zaokrągleń
+    background-color: transparent;
+    font-size: 1.1rem;
+    transition: border-color 0.3s ease;
+
+    &:focus {
+        border-bottom-color: $primary-color; // Podkreślenie w kolorze KKBus po kliknięciu [1]
+        outline: none;
+    }
+}
+
+.button {
     background-color: $primary-color;
     color: #fff;
     border: none;
-    padding: 0.75rem;
-    border-radius: 4px;
+    padding: 1rem;
+    border-radius: 4px; 
     font-size: 1rem;
-    transition: background-color 0.3s ease;
-    margin-top: 1rem;
-  
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+     transition: background-color 0.4s ease, border-radius 0.4s ease, transform 1s ease;  
+    margin-top: 1.5rem;
+
     &:hover {
-        background-color: color.adjust($primary-color, $lightness: -10%);
+        background-color: color.adjust($primary-color, $lightness: -30%);
+        border-radius: 24px; 
+       
     }
-  }
-  
+    
+
+    &:active {
+        transform: scale(0.98);
+    }
+}

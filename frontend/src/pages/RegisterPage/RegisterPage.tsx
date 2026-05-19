@@ -5,6 +5,7 @@ import { AxiosError } from 'axios';
 import { authApi } from '../../api/authApi';
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage';
 import styles from './RegisterPage.module.scss';
+import bgImage from "../../assets/logowanietlo.jpg";
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -66,58 +67,72 @@ const RegisterPage: React.FC = () => {
       }
     }
   };
+return (
+    <div className={styles.pageWrapper}>
+      {/* Lewa sekcja na Twoje zdjęcie tła */}
+      <div 
+        className={styles.imageSection} 
+        style={{ backgroundImage: `url(${bgImage})` }}
+      />
 
-  return (
-    <div className={styles.container}>
-      <h2>Rejestracja</h2>
-      <form onSubmit={handleRegister} className={styles.form}>
-        <div className={styles.formGroup}>
-          <label>Nazwa użytkownika:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className={styles.input}
-          />
-          {errors.username && <ErrorMessage message={errors.username} />}
+      {/* Prawa sekcja z formularzem - owinięta w registerSection */}
+      <div className={styles.registerSection}>
+        <div className={styles.container}>
+          <h2>Witaj w KKBus</h2>
+          <p style={{ marginBottom: '20px', color: '#666' }}>Zarejestruj się, aby zarządzać rezerwacjami</p>
+          <form onSubmit={handleRegister} className={styles.form}>
+            <div className={styles.formGroup}>
+              <label>Nazwa użytkownika:</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className={styles.input}
+              />
+              {errors.username && <ErrorMessage message={errors.username} />}
+            </div>
+            <div className={styles.formGroup}>
+              <label>Email:</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className={styles.input}
+              />
+              {errors.email && <ErrorMessage message={errors.email} />}
+            </div>
+            <div className={styles.formGroup}>
+              <label>Hasło:</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className={styles.input}
+              />
+              {errors.password && <ErrorMessage message={errors.password} />}
+            </div>
+            <div className={styles.formGroup}>
+              <label>Powtórz hasło:</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className={styles.input}
+              />
+              {errors.confirmPassword && <ErrorMessage message={errors.confirmPassword} />}
+            </div>
+            {errors.general && <ErrorMessage message={errors.general} />}
+            <button type="submit" className={styles.button}>Zarejestruj</button>
+            <div style={{ marginTop: '20px', fontSize: '0.9rem' }}>
+               Masz już konto? <span style={{ color: '#003366', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => navigate('/login')}>Zaloguj się</span>
+            </div>
+          </form>
         </div>
-        <div className={styles.formGroup}>
-          <label>Email:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className={styles.input}
-          />
-          {errors.email && <ErrorMessage message={errors.email} />}
-        </div>
-        <div className={styles.formGroup}>
-          <label>Hasło:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className={styles.input}
-          />
-          {errors.password && <ErrorMessage message={errors.password} />}
-        </div>
-        <div className={styles.formGroup}>
-          <label>Powtórz hasło:</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            className={styles.input}
-          />
-          {errors.confirmPassword && <ErrorMessage message={errors.confirmPassword} />}
-        </div>
-        {errors.general && <ErrorMessage message={errors.general} />}
-        <button type="submit" className={styles.button}>Zarejestruj</button>
-      </form>
+      </div>
     </div>
   );
 };

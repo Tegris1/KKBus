@@ -1,7 +1,12 @@
 import { useState } from "react";
 import PaymentMethodCard from "./PaymentMethodCard";
-import styles from "./Deposit.module.scss";
+import styles from "./DepositForm.module.scss";
 import { toast } from "react-toastify";
+
+// Definicja interfejsu dla propsów, aby komponent mógł komunikować się ze stroną nadrzędną
+interface DepositFormProps {
+    onDepositSuccess: (amount: number) => void;
+}
 
 const METHODS = [
     { id: "blik", name: "BLIK", icon: "📱" },
@@ -9,19 +14,27 @@ const METHODS = [
     { id: "transfer", name: "Przelew", icon: "🏦" },
 ];
 
-const DepositForm = () => {
+const DepositForm = ({ onDepositSuccess }: DepositFormProps) => {
     const [amount, setAmount] = useState<string>("");
     const [selectedMethod, setSelectedMethod] = useState<string>("blik");
 
     const handleDeposit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!amount || parseFloat(amount) <= 0) {
-            toast.error("Wprowadź poprawną kwotę.");
+        const depositValue = parseFloat(amount);
+
+        // Walidacja kwoty zgodnie ze standardami systemów płatniczych
+        if (!amount || depositValue <= 0) {
+            toast.error("Wprowadź poprawną kwotę doładowania.");
             return;
         }
 
-        // UI-only action
-        toast.success(`Zainicjowano wpłatę ${amount} PLN metodą ${selectedMethod.toUpperCase()}`);
+        // Symulacja akcji UI-only z powiadomieniem (styl transactionform.txt) [2]
+        toast.success(`Zainicjowano wpłatę ${depositValue.toFixed(2)} PLN metodą ${selectedMethod.toUpperCase()}`);
+        
+        // Wywołanie funkcji przekazanej w propsach, aby zaktualizować stan konta na stronie DepositPage
+        onDepositSuccess(depositValue);
+        
+        // Resetowanie pola wprowadzania
         setAmount("");
     };
 
@@ -29,12 +42,15 @@ const DepositForm = () => {
         <div className={styles["deposit-wrapper"]}>
             <form onSubmit={handleDeposit} className={styles["deposit-form"]}>
                 <div className={styles["input-section"]}>
+                    {/* Zastosowanie pogrubienia zgodnie z Twoim życzeniem */}
                     <label><strong>Kwota doładowania (PLN):</strong></label>
                     <input
                         type="number"
+                        step="0.01"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="0.00"
+                        className={styles["deposit-input"]}
                     />
                 </div>
 
@@ -53,7 +69,7 @@ const DepositForm = () => {
                 </div>
 
                 <button type="submit" className={styles["submit-btn"]}>
-                    Wpłać środki
+                    Doładuj konto portfela
                 </button>
             </form>
         </div>

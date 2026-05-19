@@ -7,7 +7,7 @@ import TestApiComponent from "../components/TestApiComponent";
 
 import Navbar from "../components/Navbar/Navbar";
 import TicketsPage from "../pages/TicketPage/TicketsPage.tsx";
-import TransactionForm from "../components/TransactionForm/TransactionForm";
+import TransactionForm from "../pages/TransactionForm/TransactionForm.tsx";
 import TransactionList from "../components/TransactionList/TransactionList";
 import RegisterPage from "../pages/RegisterPage/RegisterPage";
 import LoginPage from "../pages/LoginPage/LoginPage";
