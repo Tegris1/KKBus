@@ -12,7 +12,7 @@ import pasir.services.ReservationService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/transactions")
+@RequestMapping({"/api/transactions", "/api/reservations"})
 public class ReservationController {
 
     @Autowired

@@ -1,25 +1,24 @@
-export const getWalletInfo = async (clientId: number) => {
-    const response = await fetch(`/api/clients/${clientId}/wallet/`);
-    if (!response.ok) {
-        throw new Error("Nie udało się pobrać informacji o stanie konta.");
-    }
-    return response.json(); // Zwraca np. { balance: 125.50, points: 450 }
+import axiosClient from "./axiosClient";
+
+export interface WalletInfo {
+    id: number;
+    userId: number;
+    money: number;
+    points: number;
+}
+
+export const getWalletInfo = async (): Promise<WalletInfo> => {
+    const response = await axiosClient.get<WalletInfo>("wallet");
+    return response.data;
 };
 
-/**
- * Wysyła żądanie doładowania konta klienta.
- */
-export const depositFundsApi = async (clientId: number, amount: number, method: string) => {
-    const response = await fetch(`/api/clients/${clientId}/deposit/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ amount, method }),
+export const depositFundsApi = async (amount: number): Promise<WalletInfo> => {
+    const wallet = await getWalletInfo();
+    const nextMoney = Number(wallet.money) + amount;
+
+    const response = await axiosClient.patch<WalletInfo>("wallet/money", {
+        money: nextMoney,
     });
 
-    if (!response.ok) {
-        throw new Error("Wystąpił błąd podczas przetwarzania wpłaty.");
-    }
-    return response.json();
+    return response.data;
 };

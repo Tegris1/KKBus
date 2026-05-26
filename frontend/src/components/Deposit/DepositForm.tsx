@@ -1,11 +1,11 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
+import { depositFundsApi } from "../../api/depositApi";
 import PaymentMethodCard from "./PaymentMethodCard";
 import styles from "./DepositForm.module.scss";
-import { toast } from "react-toastify";
 
-// Definicja interfejsu dla propsów, aby komponent mógł komunikować się ze stroną nadrzędną
 interface DepositFormProps {
-    onDepositSuccess: (amount: number) => void;
+    onDepositSuccess: () => Promise<void> | void;
 }
 
 const METHODS = [
@@ -17,36 +17,39 @@ const METHODS = [
 const DepositForm = ({ onDepositSuccess }: DepositFormProps) => {
     const [amount, setAmount] = useState<string>("");
     const [selectedMethod, setSelectedMethod] = useState<string>("blik");
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-    const handleDeposit = (e: React.FormEvent) => {
+    const handleDeposit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const depositValue = parseFloat(amount);
+        const depositValue = Number(amount);
 
-        // Walidacja kwoty zgodnie ze standardami systemów płatniczych
-        if (!amount || depositValue <= 0) {
+        if (!amount || Number.isNaN(depositValue) || depositValue <= 0) {
             toast.error("Wprowadź poprawną kwotę doładowania.");
             return;
         }
 
-        // Symulacja akcji UI-only z powiadomieniem (styl transactionform.txt) [2]
-        toast.success(`Zainicjowano wpłatę ${depositValue.toFixed(2)} PLN metodą ${selectedMethod.toUpperCase()}`);
-        
-        // Wywołanie funkcji przekazanej w propsach, aby zaktualizować stan konta na stronie DepositPage
-        onDepositSuccess(depositValue);
-        
-        // Resetowanie pola wprowadzania
-        setAmount("");
+        try {
+            setIsSubmitting(true);
+            await depositFundsApi(depositValue);
+            toast.success(`Doładowano ${depositValue.toFixed(2)} PLN metodą ${selectedMethod.toUpperCase()}`);
+            setAmount("");
+            await onDepositSuccess();
+        } catch (error) {
+            toast.error("Wystąpił błąd podczas przetwarzania wpłaty.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
         <div className={styles["deposit-wrapper"]}>
             <form onSubmit={handleDeposit} className={styles["deposit-form"]}>
                 <div className={styles["input-section"]}>
-                    {/* Zastosowanie pogrubienia zgodnie z Twoim życzeniem */}
                     <label><strong>Kwota doładowania (PLN):</strong></label>
                     <input
                         type="number"
                         step="0.01"
+                        min="0.01"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="0.00"
@@ -57,19 +60,19 @@ const DepositForm = ({ onDepositSuccess }: DepositFormProps) => {
                 <div className={styles["methods-section"]}>
                     <label><strong>Wybierz metodę płatności:</strong></label>
                     <div className={styles["methods-grid"]}>
-                        {METHODS.map(m => (
+                        {METHODS.map((method) => (
                             <PaymentMethodCard
-                                key={m.id}
-                                {...m}
-                                isSelected={selectedMethod === m.id}
+                                key={method.id}
+                                {...method}
+                                isSelected={selectedMethod === method.id}
                                 onSelect={setSelectedMethod}
                             />
                         ))}
                     </div>
                 </div>
 
-                <button type="submit" className={styles["submit-btn"]}>
-                    Doładuj konto portfela
+                <button type="submit" className={styles["submit-btn"]} disabled={isSubmitting}>
+                    {isSubmitting ? "Przetwarzanie..." : "Doładuj konto portfela"}
                 </button>
             </form>
         </div>

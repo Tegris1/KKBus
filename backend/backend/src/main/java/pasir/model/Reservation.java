@@ -28,8 +28,13 @@ public class Reservation {
     private String tags;
     private String notes;
     private LocalDateTime timestamp;
+    private Integer seats;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "route_id")
+    private Route route;
 }

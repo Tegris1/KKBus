@@ -10,11 +10,14 @@ import pasir.model.TransactionType;
 @Getter
 @Setter
 public class ReservationDto {
-    @NotNull(message = "Kwota nie moze byc pusta")
+    private Long routeId;
+
+    @Min(value = 1, message = "Liczba miejsc nie moze byc mniejsza od 1")
+    private Integer seats;
+
     @Min(value = 1, message = "Kwota nie moze byc mniejsza od 1")
     private Double amount;
 
-    @NotNull(message = "Typ nie moze byc pusty")
     private TransactionType type;
 
     @Size(max = 50, message = "Tagi mogą mieć maksymalnie 50 znaków")

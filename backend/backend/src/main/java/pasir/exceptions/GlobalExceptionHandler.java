@@ -28,4 +28,11 @@ public class GlobalExceptionHandler {
         e.put("error", ex.getMessage());
         return new ResponseEntity<>(e,HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleExceptions(IllegalArgumentException ex) {
+        Map<String, String> e = new HashMap<>();
+        e.put("message", ex.getMessage());
+        return new ResponseEntity<>(e, HttpStatus.BAD_REQUEST);
+    }
 }

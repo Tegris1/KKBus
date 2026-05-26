@@ -16,7 +16,7 @@ const Navbar: React.FC = () => {
           {isAuthenticated && (
             <>
               <li>
-                <Link to="/add-transaction">Znajdź trasę</Link>
+                <Link to="/route-search">Znajdź trasę</Link>
               </li>
                 <li>
                     <Link to="/my-tickets">Bilety</Link>

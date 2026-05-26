@@ -1,8 +1,8 @@
 import { useContext, useState } from "react";
+import { toast } from "react-toastify";
+import { routesApi } from "../../api/routesApi";
 import { AuthContext } from "../../context/AuthContext";
 import { Route } from "../../types/route";
-import { routesApi } from "../../api/routesApi";
-import { toast } from "react-toastify";
 import styles from "./RouteBlock.module.scss";
 
 interface RouteBlockProps {
@@ -10,10 +10,27 @@ interface RouteBlockProps {
   onReservationSuccess?: () => void;
 }
 
+const formatDateTime = (value: string) => {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
+
 const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
   const { isAuthenticated } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const [seats, setSeats] = useState(1);
+  const price = Number(route.price ?? 0);
 
   const handleReservation = async () => {
     if (!isAuthenticated) {
@@ -27,15 +44,15 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
         routeId: route.id,
         seats,
       });
-      toast.success("✅ Rezerwacja dodana!");
-      if (onReservationSuccess) {
-        onReservationSuccess();
-      }
+      toast.success("Rezerwacja dodana!");
+      onReservationSuccess?.();
       setSeats(1);
     } catch (error: any) {
       if (error.response?.status === 400) {
         toast.error(
-          error.response.data?.message || "Błąd walidacji rezerwacji.",
+          error.response.data?.message ||
+            error.response.data?.error ||
+            "Błąd walidacji rezerwacji.",
         );
       } else {
         toast.error("Błąd podczas tworzenia rezerwacji.");
@@ -55,16 +72,16 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
 
       <div className={styles["route-details"]}>
         <div className={styles["detail-item"]}>
-          <span className={styles["label"]}>Odjazd:</span>
-          <span>{route.departureTime}</span>
+          <span className={styles.label}>Odjazd:</span>
+          <span>{formatDateTime(route.departureTime)}</span>
         </div>
         <div className={styles["detail-item"]}>
-          <span className={styles["label"]}>Przyjazd:</span>
-          <span>{route.arrivalTime}</span>
+          <span className={styles.label}>Przyjazd:</span>
+          <span>{formatDateTime(route.arrivalTime)}</span>
         </div>
         <div className={styles["detail-item"]}>
-          <span className={styles["label"]}>Cena:</span>
-          <span className={styles["price"]}>PLN {route.price.toFixed(2)}</span>
+          <span className={styles.label}>Cena:</span>
+          <span className={styles.price}>PLN {price.toFixed(2)}</span>
         </div>
       </div>
 
