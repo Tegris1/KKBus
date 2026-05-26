@@ -1,7 +1,11 @@
 package pasir.controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pasir.dtos.ScheduleRequestDTO;
+import pasir.dtos.ScheduleResponseDTO;
+import pasir.services.ScheduleService;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -11,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ScheduleController {
 
-    /*private final ScheduleService scheduleService;
+    private final ScheduleService scheduleService;
 
     @GetMapping
     public ResponseEntity<List<ScheduleResponseDTO>> getAllSchedules() {
@@ -42,5 +46,5 @@ public class ScheduleController {
     public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
         scheduleService.delete(id);
         return ResponseEntity.noContent().build();
-    }*/
+    }
 }

@@ -1,4 +1,4 @@
-package pasir.Mappers;
+package pasir.mappers;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;

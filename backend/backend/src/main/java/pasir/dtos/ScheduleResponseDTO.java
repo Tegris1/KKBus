@@ -1,6 +1,5 @@
-package pasir.model;
+package pasir.dtos;
 
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -10,22 +9,13 @@ import java.time.LocalTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "reservations")
-@SuppressWarnings("JpaDataSourceInspection")
-public class Schedule {
+@Builder
+public class ScheduleResponseDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long scheduleId;
-
     private Long employeeId;
-
     private Short busId;
-
     private LocalDate workingDate;
-
     private LocalTime startTime;
-
     private LocalTime endTime;
 }

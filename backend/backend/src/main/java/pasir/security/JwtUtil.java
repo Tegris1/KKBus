@@ -1,4 +1,4 @@
-package pasir.Security;
+package pasir.security;
 
 import io.jsonwebtoken.Jwts;
 import org.springframework.stereotype.Component;
