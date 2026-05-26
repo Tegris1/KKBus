@@ -33,6 +33,9 @@ public class User {
 
     private Integer Points;
 
+    @Enumerated(EnumType.STRING)
+    private Role role = Role.USER;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Wallet wallet;
 }

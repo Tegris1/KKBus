@@ -2,20 +2,23 @@ package pasir.security;
 
 import io.jsonwebtoken.Jwts;
 import org.springframework.stereotype.Component;
+import pasir.model.Role;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtUtil {
 
     private final SecretKey key = Jwts.SIG.HS512.key().build();
 
-    public String generateToken(String email) {
+    public String generateToken(String email, Role role) {
         long expirationMs = 3600000;
 
         return Jwts.builder()
                 .subject(email)
+                .claim("roles", List.of(role.name()))
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(key)
@@ -34,7 +37,6 @@ public class JwtUtil {
     public boolean validateToken(String token) {
         try {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
-            System.out.println(Jwts.parser().verifyWith(key).build().parseSignedClaims(token));
             return true;
         } catch (Exception e) {
             return false;

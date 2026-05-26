@@ -14,6 +14,7 @@ import pasir.security.JwtUtil;
 import pasir.dtos.LoginDto;
 import pasir.dtos.UserDto;
 import pasir.exceptions.UserAlreadyExistsException;
+import pasir.model.Role;
 import pasir.model.User;
 import pasir.model.Wallet;
 import pasir.repositories.UserRepository;
@@ -31,7 +32,7 @@ public class UserService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + getUserRole(user).name()))
         );
     }
 
@@ -49,6 +50,7 @@ public class UserService implements UserDetailsService {
         user.setEmail(dto.getEmail());
         user.setPassword(encoder.encode(dto.getPassword()));
         user.setPoints(0);
+        user.setRole(Role.USER);
 
         Wallet wallet = new Wallet();
         wallet.setUser(user);
@@ -65,7 +67,14 @@ public class UserService implements UserDetailsService {
             throw new BadCredentialsException("Nieprawidłowe dane logowania");
         }
 
-        return jwtUtil.generateToken(user.getEmail());
+        return jwtUtil.generateToken(user.getEmail(), getUserRole(user));
+    }
+
+    public User makeEmployee(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono uĹĽytkownika"));
+        user.setRole(Role.EMPLOYEE);
+        return userRepository.save(user);
     }
 
     public User updateUserDetails(UserDto dto, String email) {
@@ -80,5 +89,9 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono użytkownika"));
         User newUser = userMapper.updateUser(dto, oldUser);
         return userRepository.save(newUser);
+    }
+
+    private Role getUserRole(User user) {
+        return user.getRole() == null ? Role.USER : user.getRole();
     }
 }
