@@ -7,7 +7,7 @@ const HomePage = () => {
       <h1>KKBus</h1>
       <h3>Tu łączą się nasze drogi!</h3>
       <div className={styles.buttons}>
-        <Link to="/add-transaction" className={styles.btn}>Znajdź trasę</Link>
+        <Link to="/route-search" className={styles.btn}>Znajdź trasę</Link>
       </div>
     </div>
   );

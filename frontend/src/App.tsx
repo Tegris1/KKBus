@@ -1,4 +1,4 @@
-// src/App.tsx
+    // src/App.tsx
 import { AuthProvider } from "./context/AuthContext";
 import AppRouter from "./routes/AppRouter";
 

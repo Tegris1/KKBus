@@ -7,7 +7,7 @@ import TestApiComponent from "../components/TestApiComponent";
 
 import Navbar from "../components/Navbar/Navbar";
 import TicketsPage from "../pages/TicketPage/TicketsPage.tsx";
-import TransactionForm from "../pages/TransactionForm/TransactionForm.tsx";
+import RouteSearchPage from "../pages/RouteSearchPage/RouteSearchPage.tsx";
 import TransactionList from "../components/TransactionList/TransactionList";
 import RegisterPage from "../pages/RegisterPage/RegisterPage";
 import LoginPage from "../pages/LoginPage/LoginPage";
@@ -27,7 +27,7 @@ const App: React.FC = () => {
             path="/add-transaction"
             element={
               <PrivateRoute>
-                <TransactionForm />
+                <RouteSearchPage />
               </PrivateRoute>
             }
           />

@@ -1,21 +1,20 @@
-import { useState, useEffect } from "react";
-import DepositForm from "../../components/Deposit/DepositForm";
-import { getWalletInfo } from "../../api/depositApi";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { getWalletInfo } from "../../api/depositApi";
+import DepositForm from "../../components/Deposit/DepositForm";
 import styles from "./DepositPage.module.scss";
 
 const DepositPage = () => {
-    const currentClientId = 1; // Docelowo pobierane z AuthContext
     const [balance, setBalance] = useState<number>(0);
     const [points, setPoints] = useState<number>(0);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const refreshWalletData = async () => {
         try {
-            const data = await getWalletInfo(currentClientId);
-            setBalance(data.balance);
-            setPoints(data.points);
-        } catch (error: any) {
+            const data = await getWalletInfo();
+            setBalance(Number(data.money ?? 0));
+            setPoints(Number(data.points ?? 0));
+        } catch (error) {
             toast.error("Błąd podczas pobierania danych portfela");
         } finally {
             setIsLoading(false);
@@ -35,7 +34,6 @@ const DepositPage = () => {
             </header>
 
             <section className={styles.walletOverview}>
-                {/* Karta głównego salda */}
                 <div className={styles.infoCard}>
                     <span className={styles.label}>Dostępne środki</span>
                     <div className={styles.value}>
@@ -43,7 +41,6 @@ const DepositPage = () => {
                     </div>
                 </div>
 
-                {/* Karta punktów lojalnościowych - UC10 [3] */}
                 <div className={`${styles.infoCard} ${styles.loyaltyCard}`}>
                     <span className={styles.label}>Program Lojalnościowy</span>
                     <div className={styles.value}>

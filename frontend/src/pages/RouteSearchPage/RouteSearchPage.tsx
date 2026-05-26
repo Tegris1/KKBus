@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { routesApi } from "../../api/routesApi";
-import { Route } from "../../types/route";
-import RouteBlock from "../../components/RouteBlock/RouteBlock";
-import styles from "./TransactionForm.module.scss";
 import { toast } from "react-toastify";
+import { routesApi } from "../../api/routesApi";
+import RouteBlock from "../../components/RouteBlock/RouteBlock";
+import { Route } from "../../types/route";
+import styles from "./RouteSearchPage.module.scss";
 
 const CITIES = [
   "Warszawa",
@@ -23,7 +23,7 @@ interface CitySelection {
   destination: string;
 }
 
-const TransactionForm = () => {
+const RouteSearchPage = () => {
   const [citySelection, setCitySelection] = useState<CitySelection>({
     origin: "",
     destination: "",
@@ -43,28 +43,31 @@ const TransactionForm = () => {
     e.preventDefault();
 
     if (!citySelection.origin || !citySelection.destination) {
-      toast.error("Wybierz miasto wyjazdu i przyjazdu!");
+      toast.error("Wybierz miasto wyjazdu i przyjazdu.");
       return;
     }
 
     if (citySelection.origin === citySelection.destination) {
-      toast.error("Miasto wyjazdu i przyjazdu nie mogą być takie same!");
+      toast.error("Miasto wyjazdu i przyjazdu nie mogą być takie same.");
       return;
     }
 
     setIsLoading(true);
     setHasSearched(true);
+    setRoutes([]);
+
     try {
       const data = await routesApi.getRoutes(
         citySelection.origin,
         citySelection.destination,
       );
+
       setRoutes(data);
 
       if (data.length === 0) {
         toast.info("Brak dostępnych tras dla wybranego połączenia.");
       }
-    } catch (error: any) {
+    } catch (error) {
       toast.error("Błąd przy pobieraniu tras. Spróbuj ponownie.");
       console.error("Error fetching routes:", error);
     } finally {
@@ -119,7 +122,7 @@ const TransactionForm = () => {
       {hasSearched && (
         <div className={styles["routes-container"]}>
           {isLoading ? (
-            <p className={styles["loading"]}>Ładowanie tras...</p>
+            <p className={styles.loading}>Ładowanie tras...</p>
           ) : routes.length > 0 ? (
             <div className={styles["routes-list"]}>
               <h3>Dostępne trasy ({routes.length})</h3>
@@ -144,4 +147,4 @@ const TransactionForm = () => {
   );
 };
 
-export default TransactionForm;
+export default RouteSearchPage;
