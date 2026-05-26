@@ -11,7 +11,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "reservations")
+@Table(name = "schedules")
 @SuppressWarnings("JpaDataSourceInspection")
 public class Schedule {
 
