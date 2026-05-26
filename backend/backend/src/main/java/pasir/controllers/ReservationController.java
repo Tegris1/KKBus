@@ -4,6 +4,7 @@ package pasir.controllers;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pasir.dtos.ReservationDto;
 import pasir.model.Reservation;
@@ -12,7 +13,8 @@ import pasir.services.ReservationService;
 import java.util.List;
 
 @RestController
-@RequestMapping({"/api/transactions", "/api/reservations"})
+@RequestMapping("/api/transactions")
+@PreAuthorize("hasRole('USER')")
 public class ReservationController {
 
     @Autowired
