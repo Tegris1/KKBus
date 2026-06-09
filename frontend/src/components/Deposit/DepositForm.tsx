@@ -34,7 +34,7 @@ const DepositForm = ({ onDepositSuccess }: DepositFormProps) => {
             toast.success(`Doładowano ${depositValue.toFixed(2)} PLN metodą ${selectedMethod.toUpperCase()}`);
             setAmount("");
             await onDepositSuccess();
-        } catch (error) {
+        } catch {
             toast.error("Wystąpił błąd podczas przetwarzania wpłaty.");
         } finally {
             setIsSubmitting(false);

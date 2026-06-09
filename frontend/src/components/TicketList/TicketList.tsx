@@ -1,8 +1,8 @@
-import TicketCard from "./TicketCard";
+import TicketCard, { type TicketCardProps } from "./TicketCard";
 import styles from "./TicketList.module.scss";
 import { toast } from "react-toastify";
 
-const MOCK_RESERVATIONS: any[] = [
+const MOCK_RESERVATIONS: Omit<TicketCardProps, "onCancel">[] = [
     { id: 101, origin: "Kraków", destination: "Katowice", departureTime: "2026-06-20T08:00:00", seatCount: 2, totalPrice: 30.00, status: "zakupiony" },
     { id: 105, origin: "Katowice", destination: "Kraków", departureTime: "2026-06-22T16:30:00", seatCount: 1, totalPrice: 15.00, status: "zakupiony" },
     { id: 109, origin: "Kraków", destination: "Katowice", departureTime: "2026-05-10T12:00:00", seatCount: 1, totalPrice: 15.00, status: "ukończony" }

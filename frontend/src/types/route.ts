@@ -4,6 +4,7 @@ export interface Route {
   destination: string;
   departureTime: string;
   arrivalTime: string;
+  intermediateStops: string[];
   price: number;
   reservation?: unknown;
 }
@@ -18,5 +19,6 @@ export interface RouteRequest {
   departureTime: string;
   destination: string;
   arrivalTime: string;
+  intermediateStops: string[];
   price: number;
 }

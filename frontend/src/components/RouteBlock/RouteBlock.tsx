@@ -10,6 +10,16 @@ interface RouteBlockProps {
   onReservationSuccess?: () => void;
 }
 
+interface ApiErrorResponse {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+      error?: string;
+    };
+  };
+}
+
 const formatDateTime = (value: string) => {
   const date = new Date(value);
 
@@ -26,11 +36,27 @@ const formatDateTime = (value: string) => {
   }).format(date);
 };
 
+const getReservationValidationMessage = (error: unknown) => {
+  const response = (error as ApiErrorResponse).response;
+
+  if (response?.status !== 400) {
+    return null;
+  }
+
+  return (
+    response.data?.message ||
+    response.data?.error ||
+    "Blad walidacji rezerwacji."
+  );
+};
+
 const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
   const { isAuthenticated } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const [seats, setSeats] = useState(1);
   const price = Number(route.price ?? 0);
+  const intermediateStops = route.intermediateStops.filter(Boolean);
+  const routePath = [route.origin, ...intermediateStops, route.destination];
 
   const handleReservation = async () => {
     if (!isAuthenticated) {
@@ -47,13 +73,11 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
       toast.success("Rezerwacja dodana!");
       onReservationSuccess?.();
       setSeats(1);
-    } catch (error: any) {
-      if (error.response?.status === 400) {
-        toast.error(
-          error.response.data?.message ||
-            error.response.data?.error ||
-            "Błąd walidacji rezerwacji.",
-        );
+    } catch (error: unknown) {
+      const validationMessage = getReservationValidationMessage(error);
+
+      if (validationMessage) {
+        toast.error(validationMessage);
       } else {
         toast.error("Błąd podczas tworzenia rezerwacji.");
       }
@@ -65,9 +89,7 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
   return (
     <div className={styles["route-block"]}>
       <div className={styles["route-header"]}>
-        <h3>
-          {route.origin} → {route.destination}
-        </h3>
+        <h3>{routePath.join(" -> ")}</h3>
       </div>
 
       <div className={styles["route-details"]}>
@@ -84,6 +106,17 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
           <span className={styles.price}>PLN {price.toFixed(2)}</span>
         </div>
       </div>
+
+      {intermediateStops.length > 0 && (
+        <div className={styles["intermediate-stops"]}>
+          <span className={styles["stops-label"]}>Przystanki posrednie:</span>
+          <ol>
+            {intermediateStops.map((stop, index) => (
+              <li key={`${route.id}-stop-${index}`}>{stop}</li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       <div className={styles["reservation-section"]}>
         <div className={styles["seats-input"]}>

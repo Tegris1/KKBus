@@ -7,6 +7,7 @@ interface RouteResponse {
   destination: string;
   departureTime: string;
   arrivalTime: string;
+  intermediateStops?: string[] | null;
   price: number | string | null;
   reservation?: unknown;
 }
@@ -17,6 +18,7 @@ const normalizeRoute = (route: RouteResponse): Route => ({
   destination: route.destination,
   departureTime: route.departureTime,
   arrivalTime: route.arrivalTime,
+  intermediateStops: route.intermediateStops ?? [],
   price: Number(route.price ?? 0),
   reservation: route.reservation,
 });

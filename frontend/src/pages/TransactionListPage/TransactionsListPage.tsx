@@ -12,7 +12,7 @@ const TransactionsListPage = () => {
       try {
         const data = await transactionsApi.getAll();
         setTransactions(data);
-      } catch (err: any) {
+      } catch {
         setError('Błąd połączenia z serwerem KKBus.');
       } finally {
         setIsLoading(false);

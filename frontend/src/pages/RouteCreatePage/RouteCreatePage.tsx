@@ -9,6 +9,7 @@ const EMPTY_ROUTE: RouteRequest = {
   departureTime: "",
   destination: "",
   arrivalTime: "",
+  intermediateStops: [],
   price: 0,
 };
 
@@ -28,16 +29,37 @@ const RouteCreatePage = () => {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    const origin = form.origin.trim();
+    const destination = form.destination.trim();
+    const intermediateStops = form.intermediateStops
+      .map((stop) => stop.trim())
+      .filter(Boolean);
 
     if (form.arrivalTime <= form.departureTime) {
       toast.error("Czas przyjazdu musi byc pozniejszy niz czas odjazdu.");
       return;
     }
 
+    if (
+      intermediateStops.some(
+        (stop) =>
+          stop.toLowerCase() === origin.toLowerCase() ||
+          stop.toLowerCase() === destination.toLowerCase(),
+      )
+    ) {
+      toast.error("Przystanek posredni nie moze byc taki sam jak start lub cel.");
+      return;
+    }
+
     setSaving(true);
 
     try {
-      await routesApi.createRoute(form);
+      await routesApi.createRoute({
+        ...form,
+        origin,
+        destination,
+        intermediateStops,
+      });
       toast.success("Trasa zostala dodana.");
       setForm(EMPTY_ROUTE);
     } catch (error) {
@@ -46,6 +68,31 @@ const RouteCreatePage = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const addIntermediateStop = () => {
+    setForm((current) => ({
+      ...current,
+      intermediateStops: [...current.intermediateStops, ""],
+    }));
+  };
+
+  const updateIntermediateStop = (index: number, value: string) => {
+    setForm((current) => ({
+      ...current,
+      intermediateStops: current.intermediateStops.map((stop, stopIndex) =>
+        stopIndex === index ? value : stop,
+      ),
+    }));
+  };
+
+  const removeIntermediateStop = (index: number) => {
+    setForm((current) => ({
+      ...current,
+      intermediateStops: current.intermediateStops.filter(
+        (_stop, stopIndex) => stopIndex !== index,
+      ),
+    }));
   };
 
   return (
@@ -75,6 +122,54 @@ const RouteCreatePage = () => {
             required
           />
         </div>
+
+        <section className={styles.stopsSection}>
+          <div className={styles.stopsHeader}>
+            <div>
+              <h2>Przystanki posrednie</h2>
+              <p>Dodaj miasta pomiedzy wyjazdem a przyjazdem w kolejnosci przejazdu.</p>
+            </div>
+            <button
+              type="button"
+              className={styles.addStopButton}
+              onClick={addIntermediateStop}
+            >
+              Dodaj przystanek
+            </button>
+          </div>
+
+          {form.intermediateStops.length > 0 ? (
+            <div className={styles.stopsList}>
+              {form.intermediateStops.map((stop, index) => (
+                <div className={styles.stopRow} key={`intermediate-stop-${index}`}>
+                  <label htmlFor={`intermediateStop-${index}`}>
+                    Przystanek {index + 1}
+                  </label>
+                  <input
+                    id={`intermediateStop-${index}`}
+                    value={stop}
+                    onChange={(event) =>
+                      updateIntermediateStop(index, event.target.value)
+                    }
+                    placeholder="Nazwa miasta lub przystanku"
+                  />
+                  <button
+                    type="button"
+                    className={styles.removeStopButton}
+                    onClick={() => removeIntermediateStop(index)}
+                    aria-label={`Usun przystanek ${index + 1}`}
+                  >
+                    Usun
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className={styles.emptyStopsHint}>
+              Brak przystankow posrednich dla tej trasy.
+            </p>
+          )}
+        </section>
 
         <div className={styles.field}>
           <label htmlFor="departureTime">Odjazd</label>

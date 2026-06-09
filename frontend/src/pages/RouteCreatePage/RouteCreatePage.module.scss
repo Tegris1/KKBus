@@ -35,7 +35,7 @@
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 
-  button {
+  > button {
     grid-column: 1 / -1;
     background: $primary-color;
     border: 0;
@@ -74,8 +74,104 @@
   }
 }
 
+.stopsSection {
+  grid-column: 1 / -1;
+  border: 1px solid #dce3ea;
+  border-radius: 8px;
+  padding: 16px;
+  background: #f8fafc;
+}
+
+.stopsHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+
+  h2 {
+    color: $primary-color;
+    font-size: 1.1rem;
+    margin: 0 0 4px;
+  }
+
+  p {
+    color: #5b6673;
+    margin: 0;
+  }
+}
+
+.addStopButton,
+.removeStopButton {
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.addStopButton {
+  background: #e7f0fa;
+  color: $primary-color;
+  padding: 10px 12px;
+
+  &:hover {
+    background: #d7e7f8;
+  }
+}
+
+.stopsList {
+  display: grid;
+  gap: 10px;
+}
+
+.stopRow {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) 1fr auto;
+  gap: 10px;
+  align-items: center;
+
+  label {
+    color: $text-color;
+    font-weight: 700;
+  }
+
+  input {
+    width: 100%;
+    border: 1px solid #cbd5df;
+    border-radius: 6px;
+    color: $text-color;
+    font-size: 1rem;
+    padding: 10px;
+  }
+}
+
+.removeStopButton {
+  background: #f4e4e4;
+  color: #8f1f1f;
+  padding: 10px 12px;
+
+  &:hover {
+    background: #ecd0d0;
+  }
+}
+
+.emptyStopsHint {
+  color: #5b6673;
+  margin: 0;
+}
+
 @media (max-width: 680px) {
   .form {
     grid-template-columns: 1fr;
+  }
+
+  .stopRow {
+    grid-template-columns: 1fr;
+  }
+
+  .stopsHeader {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

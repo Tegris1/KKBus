@@ -14,7 +14,7 @@ const DepositPage = () => {
             const data = await getWalletInfo();
             setBalance(Number(data.money ?? 0));
             setPoints(Number(data.points ?? 0));
-        } catch (error) {
+        } catch {
             toast.error("Błąd podczas pobierania danych portfela");
         } finally {
             setIsLoading(false);
