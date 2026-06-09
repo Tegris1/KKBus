@@ -12,9 +12,16 @@ import TransactionList from "../components/TransactionList/TransactionList";
 import RegisterPage from "../pages/RegisterPage/RegisterPage";
 import LoginPage from "../pages/LoginPage/LoginPage";
 import HomePage from "../components/HomePage/HomePage";
+import AdminRoute from "../components/Route/AdminRoute";
+import EmployeeRoute from "../components/Route/EmployeeRoute";
 import PrivateRoute from "../components/Route/PrivateRoute";
 import PublicRoute from "../components/Route/PublicRoute";
+import StaffRoute from "../components/Route/StaffRoute";
+import AdminSchedulesPage from "../pages/AdminSchedulesPage/AdminSchedulesPage";
+import AdminUserRolesPage from "../pages/AdminUserRolesPage/AdminUserRolesPage";
 import DepositPage from "../pages/DepositPage/DepositPage.tsx";
+import EmployeeSchedulePage from "../pages/EmployeeSchedulePage/EmployeeSchedulePage";
+import RouteCreatePage from "../pages/RouteCreatePage/RouteCreatePage";
 
 const App: React.FC = () => {
   return (
@@ -55,6 +62,38 @@ const App: React.FC = () => {
                 </PrivateRoute>
                 }
             />
+          <Route
+            path="/employee-schedule"
+            element={
+              <EmployeeRoute>
+                <EmployeeSchedulePage />
+              </EmployeeRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <AdminUserRolesPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/schedules"
+            element={
+              <AdminRoute>
+                <AdminSchedulesPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/routes/new"
+            element={
+              <StaffRoute>
+                <RouteCreatePage />
+              </StaffRoute>
+            }
+          />
           <Route path="/test" element={<TestApiComponent />} />
           <Route
             path="/register"

@@ -1,5 +1,5 @@
 import axiosClient from "./axiosClient";
-import { Route, Reservation } from "../types/route";
+import { Route, Reservation, RouteRequest } from "../types/route";
 
 interface RouteResponse {
   id: number;
@@ -34,5 +34,10 @@ export const routesApi = {
 
   createReservation: async (reservation: Reservation): Promise<void> => {
     await axiosClient.post("reservations", reservation);
+  },
+
+  createRoute: async (route: RouteRequest): Promise<Route> => {
+    const response = await axiosClient.post<RouteResponse>("route", route);
+    return normalizeRoute(response.data);
   },
 };

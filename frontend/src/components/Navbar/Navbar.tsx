@@ -4,7 +4,8 @@ import styles from "./Navbar.module.scss";
 import { useAuth } from "../../context/AuthContext";
 
 const Navbar: React.FC = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, isEmployee, isAdmin, canManageRoutes, logout } =
+    useAuth();
 
   return (
     <nav className={styles.navbar}>
@@ -24,6 +25,26 @@ const Navbar: React.FC = () => {
                 <li>
                     <Link to={"deposit"}>Portfel</Link>
                 </li>
+                {isEmployee && (
+                  <li>
+                    <Link to="/employee-schedule">Grafik</Link>
+                  </li>
+                )}
+                {isAdmin && (
+                  <>
+                    <li>
+                      <Link to="/admin/users">Role</Link>
+                    </li>
+                    <li>
+                      <Link to="/admin/schedules">Grafiki</Link>
+                    </li>
+                  </>
+                )}
+                {canManageRoutes && (
+                  <li>
+                    <Link to="/routes/new">Dodaj trase</Link>
+                  </li>
+                )}
                 <li>
                 <Link to="/transactions">Historia</Link>
               </li>

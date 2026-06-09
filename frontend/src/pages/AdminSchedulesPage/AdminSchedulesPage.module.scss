@@ -1,0 +1,156 @@
+@use "../../styles/variables" as *;
+@use "sass:color";
+
+.page {
+  width: min(1100px, calc(100% - 32px));
+  margin: 32px auto;
+}
+
+.header {
+  margin-bottom: 24px;
+  border-bottom: 2px solid rgba($primary-color, 0.14);
+  padding-bottom: 16px;
+
+  h1 {
+    color: $primary-color;
+    font-size: 2rem;
+    margin-top: 6px;
+  }
+}
+
+.label {
+  color: #5b6673;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(120px, 1fr));
+  gap: 14px;
+  align-items: end;
+  background: #ffffff;
+  border: 1px solid #dce3ea;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.field {
+  label {
+    color: $text-color;
+    display: block;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  input,
+  select {
+    width: 100%;
+    border: 1px solid #cbd5df;
+    border-radius: 6px;
+    color: $text-color;
+    font-size: 1rem;
+    padding: 10px;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  grid-column: 1 / -1;
+
+  button {
+    background: $primary-color;
+    border: 0;
+    border-radius: 6px;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 11px 16px;
+
+    &:disabled {
+      background: color.adjust(#dce3ea, $lightness: -8%);
+      cursor: not-allowed;
+    }
+  }
+
+  .secondary {
+    background: #5b6673;
+  }
+}
+
+.state {
+  background: #ffffff;
+  border: 1px solid #dce3ea;
+  border-radius: 8px;
+  color: $primary-color;
+  font-weight: 700;
+  padding: 24px;
+  text-align: center;
+}
+
+.list {
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 1fr 140px 180px;
+  align-items: center;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #dce3ea;
+  border-left: 6px solid $primary-color;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    color: $primary-color;
+    margin-bottom: 4px;
+  }
+
+  span,
+  p {
+    color: #5b6673;
+    font-weight: 600;
+  }
+}
+
+.cardActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+
+  button {
+    background: #ffffff;
+    border: 1px solid #cbd5df;
+    border-radius: 6px;
+    color: $primary-color;
+    font-weight: 700;
+    padding: 9px 12px;
+
+    &:last-child {
+      color: $error-color;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .form,
+  .card {
+    grid-template-columns: 1fr;
+  }
+
+  .cardActions {
+    justify-content: flex-start;
+  }
+}

@@ -19,9 +19,15 @@ const LoginPage: React.FC = () => {
     setError('');
     try {
       const response = await authApi.login({ email, password });
-      login(response.data.token);
+      const roles = login(response.data.token);
 
-      navigate('/moje-bilety'); 
+      if (roles.includes("ADMIN")) {
+        navigate("/admin/users");
+      } else if (roles.includes("EMPLOYEE")) {
+        navigate("/employee-schedule");
+      } else {
+        navigate("/my-tickets");
+      }
     } catch (error) {
       if (error instanceof AxiosError) {
         if (error.response?.data) {

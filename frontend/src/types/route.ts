@@ -5,10 +5,18 @@ export interface Route {
   departureTime: string;
   arrivalTime: string;
   price: number;
-  reservation?: any;
+  reservation?: unknown;
 }
 
 export interface Reservation {
   routeId: number;
   seats: number;
+}
+
+export interface RouteRequest {
+  origin: string;
+  departureTime: string;
+  destination: string;
+  arrivalTime: string;
+  price: number;
 }

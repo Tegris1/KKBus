@@ -9,7 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import pasir.mappers.UserMapper;
+import pasir.Mappers.UserMapper;
 import pasir.security.JwtUtil;
 import pasir.dtos.LoginDto;
 import pasir.dtos.UserDto;
@@ -20,6 +20,7 @@ import pasir.model.Wallet;
 import pasir.repositories.UserRepository;
 
 import java.util.Collections;
+import java.util.List;
 
 @NullMarked
 @Service
@@ -74,6 +75,17 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono uĹĽytkownika"));
         user.setRole(Role.EMPLOYEE);
+        return userRepository.save(user);
+    }
+
+    public List<User> findAll() {
+        return userRepository.findAll();
+    }
+
+    public User updateUserRole(Long id, Role role) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono uĹĽytkownika"));
+        user.setRole(role);
         return userRepository.save(user);
     }
 

@@ -1,0 +1,138 @@
+@use "../../styles/variables" as *;
+
+.page {
+  width: min(900px, calc(100% - 32px));
+  margin: 32px auto;
+  color: $text-color;
+}
+
+.header {
+  margin-bottom: 28px;
+  border-bottom: 2px solid rgba($primary-color, 0.14);
+  padding-bottom: 18px;
+
+  h1 {
+    color: $primary-color;
+    font-size: 2rem;
+    line-height: 1.2;
+    margin: 6px 0;
+  }
+}
+
+.label {
+  color: #5b6673;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.date {
+  color: #5b6673;
+  font-weight: 600;
+}
+
+.state,
+.error,
+.empty {
+  background: #ffffff;
+  border: 1px solid #dce3ea;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.state {
+  color: $primary-color;
+  font-weight: 700;
+}
+
+.error {
+  color: $error-color;
+  font-weight: 700;
+}
+
+.empty {
+  h2 {
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: #5b6673;
+  }
+}
+
+.scheduleList {
+  display: grid;
+  gap: 16px;
+}
+
+.scheduleCard {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: center;
+  gap: 20px;
+  background: #ffffff;
+  border: 1px solid #dce3ea;
+  border-left: 6px solid $primary-color;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.timeBlock {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 76px;
+  border-right: 1px solid #dce3ea;
+
+  span {
+    color: $primary-color;
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  small {
+    color: #5b6673;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 8px;
+  }
+}
+
+.details {
+  min-width: 0;
+
+  h2 {
+    color: $primary-color;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: #5b6673;
+    font-weight: 600;
+  }
+}
+
+@media (max-width: 620px) {
+  .page {
+    width: min(100% - 24px, 900px);
+    margin-top: 24px;
+  }
+
+  .scheduleCard {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .timeBlock {
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid #dce3ea;
+    padding-bottom: 14px;
+  }
+}

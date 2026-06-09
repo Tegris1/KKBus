@@ -18,7 +18,7 @@ import java.util.List;
 public class RouteController {
     private final RouteService routeService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @PostMapping
     public ResponseEntity<Route> createRoute(@Valid @RequestBody RouteDto routeDto) {
         Route newRoute = routeService.createRoute(routeDto);
