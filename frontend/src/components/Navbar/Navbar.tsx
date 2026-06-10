@@ -5,9 +5,16 @@ import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 
 const Navbar: React.FC = () => {
-  const { isAuthenticated, isEmployee, isSecretary, isAdmin, canManageRoutes, logout } =
-    useAuth();
+  const {
+    isAuthenticated,
+    isEmployee,
+    isSecretary,
+    isAdmin,
+    canManageRoutes,
+    logout,
+  } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  const hasRoleLinks = isEmployee || isSecretary || isAdmin || canManageRoutes;
 
   return (
     <nav className={styles.navbar}>
@@ -33,35 +40,41 @@ const Navbar: React.FC = () => {
               <li>
                 <Link to="/loyalty">{t("nav.rewards")}</Link>
               </li>
-              {isEmployee && (
-                <>
-                  <li>
-                    <Link to="/employee-schedule">{t("nav.schedule")}</Link>
-                  </li>
-                  <li>
-                    <Link to="/driver/passengers">{t("nav.passengerLists")}</Link>
-                  </li>
-                </>
-              )}
-              {isAdmin && (
-                <>
-                  <li>
-                    <Link to="/admin/users">{t("nav.roles")}</Link>
-                  </li>
-                  <li>
-                    <Link to="/admin/schedules">{t("nav.schedules")}</Link>
-                  </li>
-                </>
-              )}
-              {(isSecretary || isAdmin) && (
-                <li>
-                  <Link to="/reports">{t("nav.reports")}</Link>
-                </li>
-              )}
-              {canManageRoutes && (
-                <li>
-                  <Link to="/routes/new">{t("nav.addRoute")}</Link>
-                </li>
+              {hasRoleLinks && (
+                <span className={styles["role-links"]}>
+                  {isEmployee && (
+                    <>
+                      <li>
+                        <Link to="/employee-schedule">{t("nav.schedule")}</Link>
+                      </li>
+                      <li>
+                        <Link to="/driver/passengers">
+                          {t("nav.passengerLists")}
+                        </Link>
+                      </li>
+                    </>
+                  )}
+                  {isAdmin && (
+                    <>
+                      <li>
+                        <Link to="/admin/users">{t("nav.roles")}</Link>
+                      </li>
+                      <li>
+                        <Link to="/admin/schedules">{t("nav.schedules")}</Link>
+                      </li>
+                    </>
+                  )}
+                  {(isSecretary || isAdmin) && (
+                    <li>
+                      <Link to="/reports">{t("nav.reports")}</Link>
+                    </li>
+                  )}
+                  {canManageRoutes && (
+                    <li>
+                      <Link to="/routes/new">{t("nav.addRoute")}</Link>
+                    </li>
+                  )}
+                </span>
               )}
               <li>
                 <Link to="/transactions">{t("nav.history")}</Link>
