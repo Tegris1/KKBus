@@ -1,12 +1,15 @@
     // src/App.tsx
 import { AuthProvider } from "./context/AuthContext";
 import AppRouter from "./routes/AppRouter";
+import { LanguageProvider } from "./context/LanguageContext";
 
 function App() {
   return (
-    <AuthProvider>
-      <AppRouter />
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <AppRouter />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { routesApi } from "../../api/routesApi";
 import { usersApi } from "../../api/usersApi";
+import { useLanguage } from "../../context/LanguageContext";
 import { RouteRequest } from "../../types/route";
 import { DriverOption } from "../../types/user";
 import styles from "./RouteCreatePage.module.scss";
@@ -19,6 +20,7 @@ const EMPTY_ROUTE: RouteRequest = {
 };
 
 const RouteCreatePage = () => {
+  const { t } = useLanguage();
   const [form, setForm] = useState<RouteRequest>(EMPTY_ROUTE);
   const [saving, setSaving] = useState(false);
   const [drivers, setDrivers] = useState<DriverOption[]>([]);
@@ -28,12 +30,12 @@ const RouteCreatePage = () => {
       try {
         setDrivers(await usersApi.getDrivers());
       } catch {
-        toast.error("Nie udalo sie pobrac listy kierowcow.");
+        toast.error(t("routeCreate.driversError"));
       }
     };
 
     void loadDrivers();
-  }, []);
+  }, [t]);
 
   const updateForm = <Key extends keyof RouteRequest>(
     key: Key,
@@ -54,7 +56,7 @@ const RouteCreatePage = () => {
       .filter(Boolean);
 
     if (form.arrivalTime <= form.departureTime) {
-      toast.error("Czas przyjazdu musi byc pozniejszy niz czas odjazdu.");
+      toast.error(t("routeCreate.timeError"));
       return;
     }
 
@@ -65,7 +67,7 @@ const RouteCreatePage = () => {
           stop.toLowerCase() === destination.toLowerCase(),
       )
     ) {
-      toast.error("Przystanek posredni nie moze byc taki sam jak start lub cel.");
+      toast.error(t("routeCreate.stopError"));
       return;
     }
 
@@ -78,11 +80,11 @@ const RouteCreatePage = () => {
         destination,
         intermediateStops,
       });
-      toast.success("Trasa zostala dodana.");
+      toast.success(t("routeCreate.success"));
       setForm(EMPTY_ROUTE);
     } catch (error) {
       console.error("Error creating route:", error);
-      toast.error("Nie udalo sie dodac trasy.");
+      toast.error(t("routeCreate.error"));
     } finally {
       setSaving(false);
     }
@@ -116,14 +118,14 @@ const RouteCreatePage = () => {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <p className={styles.label}>Zarzadzanie trasami</p>
-        <h1>Dodaj nowa trase</h1>
-        <p>Podany termin będzie pierwszym kursem serii powtarzanej co tydzień.</p>
+        <p className={styles.label}>{t("routeCreate.section")}</p>
+        <h1>{t("routeCreate.title")}</h1>
+        <p>{t("routeCreate.subtitle")}</p>
       </header>
 
       <form className={styles.form} onSubmit={(event) => void handleSubmit(event)}>
         <div className={styles.field}>
-          <label htmlFor="origin">Miasto wyjazdu</label>
+          <label htmlFor="origin">{t("routeCreate.origin")}</label>
           <input
             id="origin"
             value={form.origin}
@@ -133,7 +135,7 @@ const RouteCreatePage = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="destination">Miasto przyjazdu</label>
+          <label htmlFor="destination">{t("routeCreate.destination")}</label>
           <input
             id="destination"
             value={form.destination}
@@ -145,15 +147,15 @@ const RouteCreatePage = () => {
         <section className={styles.stopsSection}>
           <div className={styles.stopsHeader}>
             <div>
-              <h2>Przystanki posrednie</h2>
-              <p>Dodaj miasta pomiedzy wyjazdem a przyjazdem w kolejnosci przejazdu.</p>
+              <h2>{t("routeCreate.stops")}</h2>
+              <p>{t("routeCreate.stopsHint")}</p>
             </div>
             <button
               type="button"
               className={styles.addStopButton}
               onClick={addIntermediateStop}
             >
-              Dodaj przystanek
+              {t("routeCreate.addStop")}
             </button>
           </div>
 
@@ -162,7 +164,7 @@ const RouteCreatePage = () => {
               {form.intermediateStops.map((stop, index) => (
                 <div className={styles.stopRow} key={`intermediate-stop-${index}`}>
                   <label htmlFor={`intermediateStop-${index}`}>
-                    Przystanek {index + 1}
+                    {t("routeCreate.stop", { number: index + 1 })}
                   </label>
                   <input
                     id={`intermediateStop-${index}`}
@@ -170,28 +172,26 @@ const RouteCreatePage = () => {
                     onChange={(event) =>
                       updateIntermediateStop(index, event.target.value)
                     }
-                    placeholder="Nazwa miasta lub przystanku"
+                    placeholder={t("routeCreate.stopPlaceholder")}
                   />
                   <button
                     type="button"
                     className={styles.removeStopButton}
                     onClick={() => removeIntermediateStop(index)}
-                    aria-label={`Usun przystanek ${index + 1}`}
+                    aria-label={t("routeCreate.removeStop")}
                   >
-                    Usun
+                    {t("routeCreate.removeStop")}
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <p className={styles.emptyStopsHint}>
-              Brak przystankow posrednich dla tej trasy.
-            </p>
+            <p className={styles.emptyStopsHint}>{t("routeCreate.noStops")}</p>
           )}
         </section>
 
         <div className={styles.field}>
-          <label htmlFor="departureTime">Odjazd</label>
+          <label htmlFor="departureTime">{t("routeCreate.departure")}</label>
           <input
             id="departureTime"
             type="datetime-local"
@@ -202,7 +202,7 @@ const RouteCreatePage = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="arrivalTime">Przyjazd</label>
+          <label htmlFor="arrivalTime">{t("routeCreate.arrival")}</label>
           <input
             id="arrivalTime"
             type="datetime-local"
@@ -213,14 +213,14 @@ const RouteCreatePage = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="driverId">Kierowca</label>
+          <label htmlFor="driverId">{t("routeCreate.driver")}</label>
           <select
             id="driverId"
             value={form.driverId || ""}
             onChange={(event) => updateForm("driverId", Number(event.target.value))}
             required
           >
-            <option value="">-- Wybierz kierowce --</option>
+            <option value="">{t("routeCreate.selectDriver")}</option>
             {drivers.map((driver) => (
               <option key={driver.id} value={driver.id}>
                 {driver.name}
@@ -230,7 +230,7 @@ const RouteCreatePage = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="busId">Numer pojazdu</label>
+          <label htmlFor="busId">{t("routeCreate.bus")}</label>
           <input
             id="busId"
             type="number"
@@ -242,7 +242,7 @@ const RouteCreatePage = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="fuelCost">Koszt paliwa</label>
+          <label htmlFor="fuelCost">{t("routeCreate.fuel")}</label>
           <input
             id="fuelCost"
             type="number"
@@ -255,7 +255,7 @@ const RouteCreatePage = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="price">Cena</label>
+          <label htmlFor="price">{t("routeCreate.price")}</label>
           <input
             id="price"
             type="number"
@@ -268,7 +268,7 @@ const RouteCreatePage = () => {
         </div>
 
         <button type="submit" disabled={saving}>
-          {saving ? "Dodawanie..." : "Dodaj trase"}
+          {saving ? t("routeCreate.adding") : t("routeCreate.add")}
         </button>
       </form>
     </main>

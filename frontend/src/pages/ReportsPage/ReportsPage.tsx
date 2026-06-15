@@ -1,15 +1,9 @@
 import { FormEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { reportsApi } from "../../api/reportsApi";
+import { useLanguage } from "../../context/LanguageContext";
 import { ReportOptions, ReportPeriod, TicketReport } from "../../types/report";
 import styles from "./ReportsPage.module.scss";
-
-const PERIOD_LABELS: Record<ReportPeriod, string> = {
-  DAILY: "Dzienny",
-  WEEKLY: "Tygodniowy",
-  MONTHLY: "Miesięczny",
-  YEARLY: "Roczny",
-};
 
 const localDate = () => {
   const now = new Date();
@@ -17,22 +11,14 @@ const localDate = () => {
   return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 };
 
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat("pl-PL", {
-    style: "currency",
-    currency: "PLN",
-  }).format(value);
-
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("pl-PL", { dateStyle: "medium" }).format(new Date(value));
-
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("pl-PL", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-
 const ReportsPage = () => {
+  const { locale, t } = useLanguage();
+  const periodLabels: Record<ReportPeriod, string> = {
+    DAILY: t("reports.daily"),
+    WEEKLY: t("reports.weekly"),
+    MONTHLY: t("reports.monthly"),
+    YEARLY: t("reports.yearly"),
+  };
   const [period, setPeriod] = useState<ReportPeriod>("MONTHLY");
   const [referenceDate, setReferenceDate] = useState(localDate());
   const [driverId, setDriverId] = useState("");
@@ -41,17 +27,30 @@ const ReportsPage = () => {
   const [report, setReport] = useState<TicketReport | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const formatMoney = (value: number) =>
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: "PLN",
+    }).format(value);
+  const formatDate = (value: string) =>
+    new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(value));
+  const formatDateTime = (value: string) =>
+    new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(value));
+
   useEffect(() => {
     const loadOptions = async () => {
       try {
         setOptions(await reportsApi.getOptions());
       } catch {
-        toast.error("Nie udało się pobrać filtrów raportu.");
+        toast.error(t("reports.optionsError"));
       }
     };
 
     void loadOptions();
-  }, []);
+  }, [t]);
 
   const generateReport = async (event: FormEvent) => {
     event.preventDefault();
@@ -66,7 +65,7 @@ const ReportsPage = () => {
       });
       setReport(generatedReport);
     } catch {
-      toast.error("Nie udało się wygenerować raportu.");
+      toast.error(t("reports.generateError"));
     } finally {
       setLoading(false);
     }
@@ -76,24 +75,24 @@ const ReportsPage = () => {
     <main className={styles.page}>
       <header className={styles.pageHeader}>
         <div>
-          <p className={styles.eyebrow}>Panel sekretarki</p>
-          <h1>Raport sprzedaży biletów</h1>
-          <p>Raport obejmuje kursy odjeżdżające w wybranym okresie.</p>
+          <p className={styles.eyebrow}>{t("reports.panel")}</p>
+          <h1>{t("reports.title")}</h1>
+          <p>{t("reports.subtitle")}</p>
         </div>
       </header>
 
       <form className={styles.filters} onSubmit={(event) => void generateReport(event)}>
         <label>
-          Typ raportu
+          {t("reports.type")}
           <select value={period} onChange={(event) => setPeriod(event.target.value as ReportPeriod)}>
-            {Object.entries(PERIOD_LABELS).map(([value, label]) => (
+            {Object.entries(periodLabels).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
         </label>
 
         <label>
-          Data odniesienia
+          {t("reports.referenceDate")}
           <input
             type="date"
             value={referenceDate}
@@ -103,9 +102,9 @@ const ReportsPage = () => {
         </label>
 
         <label>
-          Kierowca
+          {t("reports.driver")}
           <select value={driverId} onChange={(event) => setDriverId(event.target.value)}>
-            <option value="">Wszyscy kierowcy</option>
+            <option value="">{t("reports.allDrivers")}</option>
             {options.drivers.map((driver) => (
               <option key={driver.id} value={driver.id}>{driver.name}</option>
             ))}
@@ -113,17 +112,17 @@ const ReportsPage = () => {
         </label>
 
         <label>
-          Pojazd
+          {t("reports.vehicle")}
           <select value={busId} onChange={(event) => setBusId(event.target.value)}>
-            <option value="">Wszystkie pojazdy</option>
+            <option value="">{t("reports.allVehicles")}</option>
             {options.busIds.map((id) => (
-              <option key={id} value={id}>Pojazd {id}</option>
+              <option key={id} value={id}>{t("reports.vehicle")} {id}</option>
             ))}
           </select>
         </label>
 
         <button type="submit" disabled={loading}>
-          {loading ? "Generowanie..." : "Generuj podgląd"}
+          {loading ? t("reports.generating") : t("reports.generate")}
         </button>
       </form>
 
@@ -132,61 +131,61 @@ const ReportsPage = () => {
           <div className={styles.reportHeader}>
             <div>
               <p className={styles.eyebrow}>KKBus</p>
-              <h2>Raport {PERIOD_LABELS[report.periodType].toLowerCase()}</h2>
+              <h2>{t("reports.title")} - {periodLabels[report.periodType].toLowerCase()}</h2>
               <p>{formatDate(report.periodStart)} - {formatDate(report.periodEnd)}</p>
             </div>
             <div className={styles.reportActions}>
-              <span>Wygenerowano: {formatDateTime(report.generatedAt)}</span>
+              <span>{t("reports.generated")}: {formatDateTime(report.generatedAt)}</span>
               <button type="button" onClick={() => window.print()}>
-                Drukuj / zapisz PDF
+                {t("reports.print")}
               </button>
             </div>
           </div>
 
           <div className={styles.summary}>
-            <article><span>Kursy</span><strong>{report.courseCount}</strong></article>
-            <article><span>Sprzedane bilety</span><strong>{report.soldTickets}</strong></article>
-            <article><span>Pasażerowie</span><strong>{report.passengerCount}</strong></article>
-            <article><span>Przychód</span><strong>{formatMoney(report.revenue)}</strong></article>
-            <article><span>Koszt paliwa</span><strong>{formatMoney(report.fuelCost)}</strong></article>
+            <article><span>{t("reports.courses")}</span><strong>{report.courseCount}</strong></article>
+            <article><span>{t("reports.soldTickets")}</span><strong>{report.soldTickets}</strong></article>
+            <article><span>{t("reports.passengers")}</span><strong>{report.passengerCount}</strong></article>
+            <article><span>{t("reports.revenue")}</span><strong>{formatMoney(report.revenue)}</strong></article>
+            <article><span>{t("reports.fuel")}</span><strong>{formatMoney(report.fuelCost)}</strong></article>
             <article className={report.profit < 0 ? styles.loss : styles.profit}>
-              <span>Wynik</span><strong>{formatMoney(report.profit)}</strong>
+              <span>{t("reports.result")}</span><strong>{formatMoney(report.profit)}</strong>
             </article>
           </div>
 
           {report.courses.length === 0 ? (
-            <p className={styles.empty}>Brak kursów spełniających wybrane kryteria.</p>
+            <p className={styles.empty}>{t("reports.empty")}</p>
           ) : (
             <div className={styles.courseList}>
               {report.courses.map((course) => (
                 <article key={`${course.routeId}-${course.departureTime}`} className={styles.course}>
                   <header>
                     <div>
-                      <h3>{course.origin} → {course.destination}</h3>
+                      <h3>{course.origin} {"->"} {course.destination}</h3>
                       <p>{formatDateTime(course.departureTime)}</p>
                     </div>
                     <div className={styles.assignment}>
-                      <span>Kierowca: <strong>{course.driverName}</strong></span>
-                      <span>Pojazd: <strong>{course.busId ?? "brak"}</strong></span>
+                      <span>{t("reports.driver")}: <strong>{course.driverName}</strong></span>
+                      <span>{t("reports.vehicle")}: <strong>{course.busId ?? t("common.none")}</strong></span>
                     </div>
                   </header>
 
                   <div className={styles.courseMetrics}>
-                    <span>Bilety <strong>{course.soldTickets}</strong></span>
-                    <span>Pasażerowie <strong>{course.passengerCount}</strong></span>
-                    <span>Przychód <strong>{formatMoney(course.revenue)}</strong></span>
-                    <span>Paliwo <strong>{formatMoney(course.fuelCost)}</strong></span>
-                    <span>Wynik <strong>{formatMoney(course.profit)}</strong></span>
+                    <span>{t("reports.tickets")} <strong>{course.soldTickets}</strong></span>
+                    <span>{t("reports.passengers")} <strong>{course.passengerCount}</strong></span>
+                    <span>{t("reports.revenue")} <strong>{formatMoney(course.revenue)}</strong></span>
+                    <span>{t("reports.fuel")} <strong>{formatMoney(course.fuelCost)}</strong></span>
+                    <span>{t("reports.result")} <strong>{formatMoney(course.profit)}</strong></span>
                   </div>
 
                   <table>
                     <thead>
-                      <tr><th>Odcinek</th><th>Liczba pasażerów</th></tr>
+                      <tr><th>{t("reports.segment")}</th><th>{t("reports.passengerCount")}</th></tr>
                     </thead>
                     <tbody>
                       {course.segments.map((segment, index) => (
                         <tr key={`${course.routeId}-${index}`}>
-                          <td>{segment.origin} → {segment.destination}</td>
+                          <td>{segment.origin} {"->"} {segment.destination}</td>
                           <td>{segment.passengerCount}</td>
                         </tr>
                       ))}
@@ -199,7 +198,7 @@ const ReportsPage = () => {
         </section>
       ) : (
         <section className={styles.placeholder}>
-          Wybierz kryteria i wygeneruj podgląd raportu.
+          {t("reports.placeholder")}
         </section>
       )}
     </main>

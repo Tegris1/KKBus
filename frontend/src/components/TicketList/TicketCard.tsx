@@ -1,3 +1,4 @@
+import { useLanguage } from "../../context/LanguageContext";
 import styles from "./TicketList.module.scss";
 
 export interface TicketCardProps {
@@ -7,57 +8,60 @@ export interface TicketCardProps {
     departureTime: string;
     seatCount: number;
     totalPrice: number;
-    status: 'nowy' | 'zakupiony' | 'anulowany' | 'ukończony';
+    status: "nowy" | "zakupiony" | "anulowany" | "ukończony";
     onCancel: (id: number) => void;
     isCancelling?: boolean;
 }
 
 const TicketCard = ({ id, origin, destination, departureTime, seatCount, totalPrice, status, onCancel, isCancelling = false }: TicketCardProps) => {
+    const { locale, t } = useLanguage();
     const departureDate = new Date(departureTime);
     const now = new Date();
-
-    // Logika zgodna z UC8: Możliwość anulowania do 24 godzin przed wyjazdem [3, 4]
-    const canCancel = status === 'zakupiony' &&
+    const canCancel = status === "zakupiony" &&
         (departureDate.getTime() - now.getTime()) > 24 * 60 * 60 * 1000;
+    const statusLabel = status === "zakupiony"
+        ? t("tickets.statusPurchased")
+        : status === "ukończony"
+            ? t("tickets.statusCompleted")
+            : status.toUpperCase();
 
     return (
         <div className={`${styles["ticket-card"]} ${styles[status]}`}>
             <div className={styles["ticket-header"]}>
                 <span className={styles["route"]}>
-                    <strong>{origin}</strong> ➔ <strong>{destination}</strong>
+                    <strong>{origin}</strong> {"->"} <strong>{destination}</strong>
                 </span>
                 <span className={`${styles["status-badge"]} ${styles[status]}`}>
-                    {status.toUpperCase()}
+                    {statusLabel}
                 </span>
             </div>
 
             <div className={styles["ticket-body"]}>
                 <div className={styles["info-row"]}>
-                    <span><strong>Data i godzina:</strong></span>
-                    <span>{departureDate.toLocaleString('pl-PL')}</span>
+                    <span><strong>{t("tickets.date")}:</strong></span>
+                    <span>{departureDate.toLocaleString(locale)}</span>
                 </div>
                 <div className={styles["info-row"]}>
-                    <span><strong>Liczba miejsc:</strong></span>
+                    <span><strong>{t("tickets.seats")}:</strong></span>
                     <span>{seatCount}</span>
                 </div>
                 <div className={styles["info-row"]}>
-                    <span><strong>Suma do zapłaty:</strong></span>
+                    <span><strong>{t("tickets.total")}:</strong></span>
                     <span className={styles["price"]}>{totalPrice.toFixed(2)} PLN</span>
                 </div>
             </div>
 
             {canCancel && (
-                <button 
-                    onClick={() => onCancel(id)} 
+                <button
+                    onClick={() => onCancel(id)}
                     className={styles["cancel-btn"]}
-                    title="Anuluj rezerwację (możliwe do 24h przed odjazdem)"
+                    title={t("tickets.cancelTitle")}
                     disabled={isCancelling}
                 >
-                    {isCancelling ? "Anulowanie..." : "Anuluj rezerwację"}
+                    {isCancelling ? t("tickets.cancelling") : t("tickets.cancel")}
                 </button>
             )}
-            
-            {/* Dekoracyjna linia perforacji dla efektu biletu */}
+
             <div className={styles["perforation"]}></div>
         </div>
     );

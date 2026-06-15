@@ -96,6 +96,29 @@
       transform: scale(1.05);
     }
   }
+
+  .languageSwitcher {
+    display: flex;
+    padding: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+
+    button {
+      min-width: 34px;
+      padding: 5px 7px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.75);
+      font-weight: 800;
+    }
+
+    .activeLanguage {
+      background: #ffffff;
+      color: $primary-color;
+    }
+  }
 }
 
 // Obsługa urządzeń mobilnych (wymóg niefunkcjonalny: Przenośność)

@@ -5,6 +5,7 @@ import RouteBlock from "../../components/RouteBlock/RouteBlock";
 import { Route } from "../../types/route";
 import styles from "./RouteSearchPage.module.scss";
 import { getWalletInfo } from "../../api/depositApi";
+import { useLanguage } from "../../context/LanguageContext";
 
 const CITIES = [
   "Warszawa",
@@ -25,6 +26,7 @@ interface CitySelection {
 }
 
 const RouteSearchPage = () => {
+  const { t } = useLanguage();
   const [citySelection, setCitySelection] = useState<CitySelection>({
     origin: "",
     destination: "",
@@ -58,12 +60,12 @@ const RouteSearchPage = () => {
     e.preventDefault();
 
     if (!citySelection.origin || !citySelection.destination) {
-      toast.error("Wybierz miasto wyjazdu i przyjazdu.");
+      toast.error(t("search.selectBoth"));
       return;
     }
 
     if (citySelection.origin === citySelection.destination) {
-      toast.error("Miasto wyjazdu i przyjazdu nie mogą być takie same.");
+      toast.error(t("search.sameCity"));
       return;
     }
 
@@ -80,10 +82,10 @@ const RouteSearchPage = () => {
       setRoutes(data);
 
       if (data.length === 0) {
-        toast.info("Brak dostępnych tras dla wybranego połączenia.");
+        toast.info(t("search.empty"));
       }
     } catch (error) {
-      toast.error("Błąd przy pobieraniu tras. Spróbuj ponownie.");
+      toast.error(t("search.loadError"));
       console.error("Error fetching routes:", error);
     } finally {
       setIsLoading(false);
@@ -92,18 +94,18 @@ const RouteSearchPage = () => {
 
   return (
     <div className={styles["route-selector"]}>
-      <h2>Zarezerwuj miejsce w autobusie</h2>
+      <h2>{t("search.title")}</h2>
 
       <form onSubmit={handleSearch} className={styles["search-form"]}>
         <div className={styles["form-group"]}>
-          <label htmlFor="origin-city">Miasto wyjazdu:</label>
+          <label htmlFor="origin-city">{t("search.origin")}:</label>
           <select
             id="origin-city"
             value={citySelection.origin}
             onChange={(e) => handleCityChange("origin", e.target.value)}
             required
           >
-            <option value="">-- Wybierz miasto --</option>
+            <option value="">{t("search.selectCity")}</option>
             {CITIES.map((city) => (
               <option key={city} value={city}>
                 {city}
@@ -113,14 +115,14 @@ const RouteSearchPage = () => {
         </div>
 
         <div className={styles["form-group"]}>
-          <label htmlFor="destination-city">Miasto przyjazdu:</label>
+          <label htmlFor="destination-city">{t("search.destination")}:</label>
           <select
             id="destination-city"
             value={citySelection.destination}
             onChange={(e) => handleCityChange("destination", e.target.value)}
             required
           >
-            <option value="">-- Wybierz miasto --</option>
+            <option value="">{t("search.selectCity")}</option>
             {CITIES.map((city) => (
               <option key={city} value={city}>
                 {city}
@@ -130,17 +132,19 @@ const RouteSearchPage = () => {
         </div>
 
         <button type="submit" disabled={isLoading}>
-          {isLoading ? "Szukam tras..." : "Szukaj tras"}
+          {isLoading ? t("search.searching") : t("search.search")}
         </button>
       </form>
 
       {hasSearched && (
         <div className={styles["routes-container"]}>
           {isLoading ? (
-            <p className={styles.loading}>Ładowanie tras...</p>
+            <p className={styles.loading}>{t("search.loading")}</p>
           ) : routes.length > 0 ? (
             <div className={styles["routes-list"]}>
-              <h3>Dostępne trasy ({routes.length})</h3>
+              <h3>
+                {t("search.available")} ({routes.length})
+              </h3>
               {routes.map((route) => (
                 <RouteBlock
                   key={route.id}
@@ -151,9 +155,7 @@ const RouteSearchPage = () => {
               ))}
             </div>
           ) : (
-            <p className={styles["no-routes"]}>
-              Brak dostępnych tras dla wybranego połączenia.
-            </p>
+            <p className={styles["no-routes"]}>{t("search.empty")}</p>
           )}
         </div>
       )}

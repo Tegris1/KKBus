@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import { toast } from "react-toastify";
 import { routesApi } from "../../api/routesApi";
 import { AuthContext } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { Route } from "../../types/route";
 import styles from "./RouteBlock.module.scss";
 
@@ -21,22 +22,6 @@ interface ApiErrorResponse {
   };
 }
 
-const formatDateTime = (value: string) => {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("pl-PL", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-};
-
 const getReservationValidationMessage = (error: unknown) => {
   const response = (error as ApiErrorResponse).response;
 
@@ -44,11 +29,7 @@ const getReservationValidationMessage = (error: unknown) => {
     return null;
   }
 
-  return (
-    response.data?.message ||
-    response.data?.error ||
-    "Blad walidacji rezerwacji."
-  );
+  return response.data?.message || response.data?.error || null;
 };
 
 const RouteBlock = ({
@@ -57,6 +38,7 @@ const RouteBlock = ({
   onReservationSuccess,
 }: RouteBlockProps) => {
   const { isAuthenticated } = useContext(AuthContext);
+  const { locale, t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [seats, setSeats] = useState(1);
   const [usePointsDiscount, setUsePointsDiscount] = useState(false);
@@ -69,14 +51,30 @@ const RouteBlock = ({
   const intermediateStops = route.intermediateStops.filter(Boolean);
   const routePath = [route.origin, ...intermediateStops, route.destination];
 
+  const formatDateTime = (value: string) => {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  };
+
   const handleReservation = async () => {
     if (hasDeparted) {
-      toast.error("Nie można zarezerwować zakończonego kursu.");
+      toast.error(t("route.pastError"));
       return;
     }
 
     if (!isAuthenticated) {
-      toast.error("Musisz być zalogowany, aby zarezerwować trasę!");
+      toast.error(t("route.loginRequired"));
       return;
     }
 
@@ -89,22 +87,21 @@ const RouteBlock = ({
         usePointsDiscount,
       });
       const discountMessage = reservation.pointsSpent
-        ? ` Użyto ${reservation.pointsSpent} pkt i obniżono cenę o ${Number(reservation.discountAmount ?? 0).toFixed(2)} PLN.`
+        ? t("route.discountUsed", {
+            points: reservation.pointsSpent,
+            amount: Number(reservation.discountAmount ?? 0).toFixed(2),
+          })
         : "";
       toast.success(
-        `Rezerwacja dodana! Zdobyto ${reservation.awardedPoints ?? 0} pkt.${discountMessage}`,
+        `${t("route.bookingSuccess", {
+          points: reservation.awardedPoints ?? 0,
+        })}${discountMessage}`,
       );
       await onReservationSuccess?.();
       setSeats(1);
       setUsePointsDiscount(false);
     } catch (error: unknown) {
-      const validationMessage = getReservationValidationMessage(error);
-
-      if (validationMessage) {
-        toast.error(validationMessage);
-      } else {
-        toast.error("Błąd podczas tworzenia rezerwacji.");
-      }
+      toast.error(getReservationValidationMessage(error) ?? t("route.bookingError"));
     } finally {
       setIsLoading(false);
     }
@@ -114,27 +111,27 @@ const RouteBlock = ({
     <div className={styles["route-block"]}>
       <div className={styles["route-header"]}>
         <h3>{routePath.join(" -> ")}</h3>
-        <span>kurs tygodniowy</span>
+        <span>{t("route.weekly")}</span>
       </div>
 
       <div className={styles["route-details"]}>
         <div className={styles["detail-item"]}>
-          <span className={styles.label}>Odjazd:</span>
+          <span className={styles.label}>{t("route.departure")}:</span>
           <span>{formatDateTime(route.departureTime)}</span>
         </div>
         <div className={styles["detail-item"]}>
-          <span className={styles.label}>Przyjazd:</span>
+          <span className={styles.label}>{t("route.arrival")}:</span>
           <span>{formatDateTime(route.arrivalTime)}</span>
         </div>
         <div className={styles["detail-item"]}>
-          <span className={styles.label}>Cena:</span>
+          <span className={styles.label}>{t("route.price")}:</span>
           <span className={styles.price}>PLN {price.toFixed(2)}</span>
         </div>
       </div>
 
       {intermediateStops.length > 0 && (
         <div className={styles["intermediate-stops"]}>
-          <span className={styles["stops-label"]}>Przystanki posrednie:</span>
+          <span className={styles["stops-label"]}>{t("route.stops")}:</span>
           <ol>
             {intermediateStops.map((stop, index) => (
               <li key={`${route.id}-stop-${index}`}>{stop}</li>
@@ -145,7 +142,7 @@ const RouteBlock = ({
 
       <div className={styles["reservation-section"]}>
         <div className={styles["seats-input"]}>
-          <label htmlFor={`seats-${route.id}`}>Liczba miejsc:</label>
+          <label htmlFor={`seats-${route.id}`}>{t("route.seats")}:</label>
           <input
             id={`seats-${route.id}`}
             type="number"
@@ -166,12 +163,12 @@ const RouteBlock = ({
             disabled={!canUseDiscount || isLoading || hasDeparted}
             onClick={() => setUsePointsDiscount((current) => !current)}
           >
-            {usePointsDiscount ? "Usuń zniżkę" : "Użyj 50 pkt (-10 PLN)"}
+            {usePointsDiscount ? t("route.removeDiscount") : t("route.useDiscount")}
           </button>
           <small>
             {availablePoints === null
-              ? "Pobieranie punktów..."
-              : `Dostępne punkty: ${availablePoints}`}
+              ? t("route.loadingPoints")
+              : t("route.availablePoints", { points: availablePoints })}
           </small>
         </div>
         <div className={styles["price-summary"]}>
@@ -188,17 +185,17 @@ const RouteBlock = ({
           disabled={!isAuthenticated || isLoading || hasDeparted}
           title={
             hasDeparted
-              ? "Ten kurs już się odbył"
+              ? t("route.finished")
               : !isAuthenticated
-                ? "Zaloguj się, aby zarezerwować"
+                ? t("route.loginRequired")
                 : ""
           }
         >
           {hasDeparted
-            ? "Kurs zakończony"
+            ? t("route.finished")
             : isLoading
-              ? "Rezerwuję..."
-              : "Zarezerwuj"}
+              ? t("route.booking")
+              : t("route.book")}
         </button>
       </div>
     </div>

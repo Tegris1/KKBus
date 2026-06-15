@@ -8,6 +8,7 @@ import {
   redeemReward,
   RewardRedemption,
 } from "../../api/loyaltyApi";
+import { useLanguage } from "../../context/LanguageContext";
 import styles from "./LoyaltyPage.module.scss";
 
 interface ApiError {
@@ -18,18 +19,19 @@ interface ApiError {
   };
 }
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("pl-PL", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-
 const LoyaltyPage = () => {
+  const { locale, t } = useLanguage();
   const [points, setPoints] = useState(0);
   const [rewards, setRewards] = useState<LoyaltyReward[]>([]);
   const [redemptions, setRedemptions] = useState<RewardRedemption[]>([]);
   const [redeemingId, setRedeemingId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const formatDate = (value: string) =>
+    new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(value));
 
   const loadData = useCallback(async () => {
     try {
@@ -42,11 +44,11 @@ const LoyaltyPage = () => {
       setRewards(rewardCatalog);
       setRedemptions(ownedRewards);
     } catch {
-      toast.error("Nie udało się pobrać danych programu lojalnościowego.");
+      toast.error(t("loyalty.loadError"));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void loadData();
@@ -56,35 +58,35 @@ const LoyaltyPage = () => {
     try {
       setRedeemingId(reward.id);
       const redemption = await redeemReward(reward.id);
-      toast.success(`Odebrano: ${redemption.rewardName}`);
+      toast.success(t("loyalty.redeemed", { name: redemption.rewardName }));
       await loadData();
     } catch (error: unknown) {
       const message = (error as ApiError).response?.data?.message;
-      toast.error(message ?? "Nie udało się odebrać nagrody.");
+      toast.error(message ?? t("loyalty.redeemError"));
     } finally {
       setRedeemingId(null);
     }
   };
 
   if (isLoading) {
-    return <main className={styles.page}>Ładowanie programu lojalnościowego...</main>;
+    return <main className={styles.page}>{t("loyalty.loading")}</main>;
   }
 
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <h1>Program lojalnościowy</h1>
-          <p>Za zakup biletu otrzymujesz 1 punkt za każde wydane 10 PLN.</p>
+          <h1>{t("loyalty.title")}</h1>
+          <p>{t("loyalty.subtitle")}</p>
         </div>
         <div className={styles.balance}>
-          <span>Twoje punkty</span>
+          <span>{t("loyalty.points")}</span>
           <strong>{points} pkt</strong>
         </div>
       </header>
 
       <section>
-        <h2>Katalog nagród</h2>
+        <h2>{t("loyalty.catalog")}</h2>
         <div className={styles.rewardGrid}>
           {rewards.map((reward) => (
             <article className={styles.rewardCard} key={reward.id}>
@@ -100,10 +102,10 @@ const LoyaltyPage = () => {
                   onClick={() => void handleRedeem(reward)}
                 >
                   {redeemingId === reward.id
-                    ? "Odbieranie..."
+                    ? t("loyalty.redeeming")
                     : reward.affordable
-                      ? "Odbierz"
-                      : "Za mało punktów"}
+                      ? t("loyalty.redeem")
+                      : t("loyalty.notEnough")}
                 </button>
               </div>
             </article>
@@ -112,9 +114,9 @@ const LoyaltyPage = () => {
       </section>
 
       <section className={styles.ownedSection}>
-        <h2>Twoje odebrane nagrody</h2>
+        <h2>{t("loyalty.owned")}</h2>
         {redemptions.length === 0 ? (
-          <p className={styles.empty}>Nie masz jeszcze odebranych nagród.</p>
+          <p className={styles.empty}>{t("loyalty.empty")}</p>
         ) : (
           <div className={styles.redemptionList}>
             {redemptions.map((redemption) => (

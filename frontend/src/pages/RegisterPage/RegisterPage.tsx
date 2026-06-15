@@ -1,43 +1,41 @@
-// src/pages/RegisterPage/RegisterPage.tsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AxiosError } from 'axios';
-import { authApi } from '../../api/authApi';
-import ErrorMessage from '../../components/ErrorMessage/ErrorMessage';
-import styles from './RegisterPage.module.scss';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { AxiosError } from "axios";
+import { authApi } from "../../api/authApi";
+import ErrorMessage from "../../components/ErrorMessage/ErrorMessage";
+import styles from "./RegisterPage.module.scss";
 import bgImage from "../../assets/logowanietlo.jpg";
+import { useLanguage } from "../../context/LanguageContext";
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const { t } = useLanguage();
+  const [username, setUsername] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
     if (!username.trim()) {
-      newErrors.username = 'username jest wymagany.';
+      newErrors.username = t("auth.usernameRequired");
     }
-
     if (!email.trim()) {
-      newErrors.email = 'Email jest wymagany.';
+      newErrors.email = t("auth.emailRequired");
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Nieprawidłowy format email.';
+      newErrors.email = t("auth.emailInvalid");
     }
-
     if (!password) {
-      newErrors.password = 'Hasło jest wymagane.';
+      newErrors.password = t("auth.passwordRequired");
     } else if (password.length < 6) {
-      newErrors.password = 'Hasło musi mieć co najmniej 6 znaków.';
+      newErrors.password = t("auth.passwordLength");
     }
-
     if (!confirmPassword) {
-      newErrors.confirmPassword = 'Powtórzenie hasła jest wymagane.';
+      newErrors.confirmPassword = t("auth.confirmRequired");
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Hasła muszą być identyczne.';
+      newErrors.confirmPassword = t("auth.passwordMismatch");
     }
 
     setErrors(newErrors);
@@ -46,43 +44,48 @@ const RegisterPage: React.FC = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({}); // Reset błędów
+    setErrors({});
 
     if (!validate()) return;
 
     try {
       await authApi.register({ username, email, password });
-      alert('Rejestracja udana. Możesz się teraz zalogować.');
-      navigate('/login');
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.data) {
-          const errorData = error.response.data;
-          setErrors(errorData.errors || { general: errorData.message || 'Błąd rejestracji. Spróbuj ponownie.' });
+      alert(t("auth.registrationSuccess"));
+      navigate("/login");
+    } catch (requestError) {
+      if (requestError instanceof AxiosError) {
+        if (requestError.response?.data) {
+          const errorData = requestError.response.data;
+          setErrors(
+            errorData.errors || {
+              general: errorData.message || t("auth.registrationError"),
+            },
+          );
         } else {
-          setErrors({ general: 'Błąd rejestracji. Spróbuj ponownie.' });
+          setErrors({ general: t("auth.registrationError") });
         }
       } else {
-        setErrors({ general: 'Wystąpił nieznany błąd podczas rejestracji.' });
+        setErrors({ general: t("auth.unknownRegistrationError") });
       }
     }
   };
-return (
+
+  return (
     <div className={styles.pageWrapper}>
-      {/* Lewa sekcja na Twoje zdjęcie tła */}
-      <div 
-        className={styles.imageSection} 
+      <div
+        className={styles.imageSection}
         style={{ backgroundImage: `url(${bgImage})` }}
       />
 
-      {/* Prawa sekcja z formularzem - owinięta w registerSection */}
       <div className={styles.registerSection}>
         <div className={styles.container}>
-          <h2>Witaj w KKBus</h2>
-          <p style={{ marginBottom: '20px', color: '#666' }}>Zarejestruj się, aby zarządzać rezerwacjami</p>
+          <h2>{t("auth.welcome")}</h2>
+          <p style={{ marginBottom: "20px", color: "#666" }}>
+            {t("auth.registerSubtitle")}
+          </p>
           <form onSubmit={handleRegister} className={styles.form}>
             <div className={styles.formGroup}>
-              <label>Nazwa użytkownika:</label>
+              <label>{t("auth.username")}:</label>
               <input
                 type="text"
                 value={username}
@@ -93,7 +96,7 @@ return (
               {errors.username && <ErrorMessage message={errors.username} />}
             </div>
             <div className={styles.formGroup}>
-              <label>Email:</label>
+              <label>{t("auth.email")}:</label>
               <input
                 type="email"
                 value={email}
@@ -104,7 +107,7 @@ return (
               {errors.email && <ErrorMessage message={errors.email} />}
             </div>
             <div className={styles.formGroup}>
-              <label>Hasło:</label>
+              <label>{t("auth.password")}:</label>
               <input
                 type="password"
                 value={password}
@@ -115,7 +118,7 @@ return (
               {errors.password && <ErrorMessage message={errors.password} />}
             </div>
             <div className={styles.formGroup}>
-              <label>Powtórz hasło:</label>
+              <label>{t("auth.confirmPassword")}:</label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -123,12 +126,22 @@ return (
                 required
                 className={styles.input}
               />
-              {errors.confirmPassword && <ErrorMessage message={errors.confirmPassword} />}
+              {errors.confirmPassword && (
+                <ErrorMessage message={errors.confirmPassword} />
+              )}
             </div>
             {errors.general && <ErrorMessage message={errors.general} />}
-            <button type="submit" className={styles.button}>Zarejestruj</button>
-            <div style={{ marginTop: '20px', fontSize: '0.9rem' }}>
-               Masz już konto? <span style={{ color: '#003366', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => navigate('/login')}>Zaloguj się</span>
+            <button type="submit" className={styles.button}>
+              {t("auth.register")}
+            </button>
+            <div style={{ marginTop: "20px", fontSize: "0.9rem" }}>
+              {t("auth.hasAccount")}{" "}
+              <span
+                style={{ color: "#003366", cursor: "pointer", fontWeight: "bold" }}
+                onClick={() => navigate("/login")}
+              >
+                {t("auth.login")}
+              </span>
             </div>
           </form>
         </div>
