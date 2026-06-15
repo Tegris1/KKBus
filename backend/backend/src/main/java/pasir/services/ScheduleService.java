@@ -48,6 +48,7 @@ public class ScheduleService {
     @Transactional
     public ScheduleResponseDTO create(ScheduleRequestDTO dto) {
         requireEmployee(dto.getEmployeeId());
+        validateTimeRange(dto);
         Schedule schedule = scheduleMapper.toEntity(dto);
         Schedule savedSchedule = scheduleRepository.save(schedule);
         return scheduleMapper.toResponseDTO(savedSchedule);
@@ -59,6 +60,7 @@ public class ScheduleService {
                 .orElseThrow(() -> new EntityNotFoundException("Brak grafiku o ID: " + id));
 
         requireEmployee(dto.getEmployeeId());
+        validateTimeRange(dto);
         scheduleMapper.updateEntity(schedule, dto);
         Schedule updatedSchedule = scheduleRepository.save(schedule);
         return scheduleMapper.toResponseDTO(updatedSchedule);
@@ -88,6 +90,12 @@ public class ScheduleService {
 
         if (employee.getRole() != Role.EMPLOYEE) {
             throw new AccessDeniedException("Grafik moĹĽna utworzyÄ‡ tylko dla pracownika");
+        }
+    }
+
+    private void validateTimeRange(ScheduleRequestDTO dto) {
+        if (!dto.getEndTime().isAfter(dto.getStartTime())) {
+            throw new IllegalArgumentException("Godzina zakonczenia musi byc pozniejsza niz godzina rozpoczecia");
         }
     }
 }

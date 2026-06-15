@@ -10,7 +10,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import pasir.dtos.ScheduleRequestDTO;
 
-import java.time.LocalDate;
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -33,7 +33,7 @@ public class ScheduleControllerTest {
         ScheduleRequestDTO request = ScheduleRequestDTO.builder()
                 .employeeId(1L)
                 .busId((short) 101)
-                .workingDate(LocalDate.of(2023, 12, 1))
+                .dayOfWeek(DayOfWeek.FRIDAY)
                 .startTime(LocalTime.of(8, 0))
                 .endTime(LocalTime.of(16, 0))
                 .build();
@@ -45,7 +45,7 @@ public class ScheduleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.employeeId").value(1L))
                 .andExpect(jsonPath("$.busId").value(101))
-                .andExpect(jsonPath("$.workingDate").value("2023-12-01"));
+                .andExpect(jsonPath("$.dayOfWeek").value("FRIDAY"));
     }
 
     @Test

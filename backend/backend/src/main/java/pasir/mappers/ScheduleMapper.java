@@ -16,7 +16,7 @@ public class ScheduleMapper {
                 .scheduleId(entity.getScheduleId())
                 .employeeId(entity.getEmployeeId())
                 .busId(entity.getBusId())
-                .workingDate(entity.getWorkingDate())
+                .dayOfWeek(resolveDayOfWeek(entity))
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
                 .build();
@@ -37,8 +37,21 @@ public class ScheduleMapper {
 
         entity.setEmployeeId(dto.getEmployeeId());
         entity.setBusId(dto.getBusId());
-        entity.setWorkingDate(dto.getWorkingDate());
+        entity.setDayOfWeek(dto.getDayOfWeek());
+        entity.setWorkingDate(null);
         entity.setStartTime(dto.getStartTime());
         entity.setEndTime(dto.getEndTime());
+    }
+
+    private java.time.DayOfWeek resolveDayOfWeek(Schedule entity) {
+        if (entity.getDayOfWeek() != null) {
+            return entity.getDayOfWeek();
+        }
+
+        if (entity.getWorkingDate() != null) {
+            return entity.getWorkingDate().getDayOfWeek();
+        }
+
+        return null;
     }
 }

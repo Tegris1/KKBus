@@ -3,6 +3,7 @@ package pasir.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -24,6 +25,9 @@ public class Schedule {
     private Short busId;
 
     private LocalDate workingDate;
+
+    @Enumerated(EnumType.STRING)
+    private DayOfWeek dayOfWeek;
 
     private LocalTime startTime;
 

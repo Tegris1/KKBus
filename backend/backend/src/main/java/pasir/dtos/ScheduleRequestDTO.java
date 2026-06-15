@@ -3,7 +3,7 @@ package pasir.dtos;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 @Getter
@@ -20,7 +20,7 @@ public class ScheduleRequestDTO {
     private Short busId;
 
     @NotNull
-    private LocalDate workingDate;
+    private DayOfWeek dayOfWeek;
 
     @NotNull
     private LocalTime startTime;

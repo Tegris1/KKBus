@@ -2,17 +2,38 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { scheduleApi } from "../../api/scheduleApi";
 import { usersApi } from "../../api/usersApi";
-import { Schedule, ScheduleRequest } from "../../types/schedule";
+import {
+  Schedule,
+  ScheduleDay,
+  ScheduleRequest,
+  SCHEDULE_DAYS,
+} from "../../types/schedule";
 import { User } from "../../types/user";
 import styles from "./AdminSchedulesPage.module.scss";
 
 const EMPTY_FORM: ScheduleRequest = {
   employeeId: 0,
   busId: 0,
-  workingDate: "",
+  dayOfWeek: "MONDAY",
   startTime: "",
   endTime: "",
 };
+
+const dayOrder = SCHEDULE_DAYS.reduce<Record<ScheduleDay, number>>(
+  (order, day, index) => {
+    order[day.value] = index;
+    return order;
+  },
+  {} as Record<ScheduleDay, number>,
+);
+
+const dayLabels = SCHEDULE_DAYS.reduce<Record<ScheduleDay, string>>(
+  (labels, day) => {
+    labels[day.value] = day.label;
+    return labels;
+  },
+  {} as Record<ScheduleDay, string>,
+);
 
 const AdminSchedulesPage = () => {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -78,7 +99,7 @@ const AdminSchedulesPage = () => {
     setForm({
       employeeId: schedule.employeeId,
       busId: schedule.busId,
-      workingDate: schedule.workingDate,
+      dayOfWeek: schedule.dayOfWeek,
       startTime: schedule.startTime.slice(0, 5),
       endTime: schedule.endTime.slice(0, 5),
     });
@@ -89,6 +110,11 @@ const AdminSchedulesPage = () => {
 
     if (!form.employeeId || !form.busId) {
       toast.error("Wybierz pracownika i podaj numer autobusu.");
+      return;
+    }
+
+    if (form.endTime <= form.startTime) {
+      toast.error("Godzina konca musi byc pozniejsza niz godzina startu.");
       return;
     }
 
@@ -129,11 +155,15 @@ const AdminSchedulesPage = () => {
 
   const sortedSchedules = useMemo(
     () =>
-      [...schedules].sort((first, second) =>
-        `${first.workingDate} ${first.startTime}`.localeCompare(
-          `${second.workingDate} ${second.startTime}`,
-        ),
-      ),
+      [...schedules].sort((first, second) => {
+        const dayComparison = dayOrder[first.dayOfWeek] - dayOrder[second.dayOfWeek];
+
+        if (dayComparison !== 0) {
+          return dayComparison;
+        }
+
+        return first.startTime.localeCompare(second.startTime);
+      }),
     [schedules],
   );
 
@@ -175,18 +205,25 @@ const AdminSchedulesPage = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="workingDate">Data</label>
-          <input
-            id="workingDate"
-            type="date"
-            value={form.workingDate}
-            onChange={(event) => updateForm("workingDate", event.target.value)}
+          <label htmlFor="dayOfWeek">Dzien tygodnia</label>
+          <select
+            id="dayOfWeek"
+            value={form.dayOfWeek}
+            onChange={(event) =>
+              updateForm("dayOfWeek", event.target.value as ScheduleDay)
+            }
             required
-          />
+          >
+            {SCHEDULE_DAYS.map((day) => (
+              <option key={day.value} value={day.value}>
+                {day.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="startTime">Start</label>
+          <label htmlFor="startTime">Od</label>
           <input
             id="startTime"
             type="time"
@@ -197,7 +234,7 @@ const AdminSchedulesPage = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="endTime">Koniec</label>
+          <label htmlFor="endTime">Do</label>
           <input
             id="endTime"
             type="time"
@@ -228,7 +265,7 @@ const AdminSchedulesPage = () => {
               <div>
                 <strong>{employeeNames[schedule.employeeId] ?? `ID ${schedule.employeeId}`}</strong>
                 <span>
-                  {schedule.workingDate}, {schedule.startTime.slice(0, 5)}-
+                  {dayLabels[schedule.dayOfWeek]}, {schedule.startTime.slice(0, 5)}-
                   {schedule.endTime.slice(0, 5)}
                 </span>
               </div>
