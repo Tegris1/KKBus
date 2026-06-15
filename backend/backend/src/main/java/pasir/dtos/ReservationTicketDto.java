@@ -21,7 +21,9 @@ public record ReservationTicketDto(
                 reservation.getRoute().getId(),
                 reservation.getRoute().getOrigin(),
                 reservation.getRoute().getDestination(),
-                reservation.getRoute().getDepartureTime()
+                reservation.getTravelDepartureTime() == null
+                        ? reservation.getRoute().getDepartureTime()
+                        : reservation.getTravelDepartureTime()
         );
     }
 }

@@ -19,6 +19,7 @@ import pasir.repositories.UserRepository;
 import pasir.repositories.WalletRepository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class ReservationService {
     private final UserRepository userRepository;
     private final RouteRepository routeRepository;
     private final WalletRepository walletRepository;
+    private final WeeklyRouteService weeklyRouteService;
 
 
     public Reservation getTransactionById(Long id) {
@@ -81,6 +83,20 @@ public class ReservationService {
         if (seats < 1) {
             throw new IllegalArgumentException("Liczba miejsc musi byc wieksza od 0");
         }
+        LocalDateTime travelDepartureTime = reservationDto.getTravelDepartureTime();
+        if (travelDepartureTime == null || !weeklyRouteService.isValidOccurrence(route, travelDepartureTime)) {
+            throw new IllegalArgumentException("Nieprawidlowy termin kursu tygodniowego");
+        }
+        if (!travelDepartureTime.isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Nie mozna zarezerwowac zakonczonego kursu");
+        }
+        var occurrence = weeklyRouteService.occurrencesBetween(
+                route,
+                travelDepartureTime,
+                travelDepartureTime.plusNanos(1)
+        ).stream().findFirst().orElseThrow(
+                () -> new IllegalArgumentException("Nieprawidlowy termin kursu tygodniowego")
+        );
 
         BigDecimal totalPrice = route.getPrice().multiply(BigDecimal.valueOf(seats));
         Wallet wallet = getOrCreateWallet(user);
@@ -90,6 +106,12 @@ public class ReservationService {
         }
 
         wallet.setMoney(wallet.getMoney().subtract(totalPrice));
+        int awardedPoints = totalPrice
+                .divide(BigDecimal.TEN, 0, RoundingMode.DOWN)
+                .intValueExact();
+        int updatedPoints = (wallet.getPoints() == null ? 0 : wallet.getPoints()) + awardedPoints;
+        wallet.setPoints(updatedPoints);
+        user.setPoints(updatedPoints);
         walletRepository.save(wallet);
 
         Reservation reservation = new Reservation();
@@ -101,6 +123,9 @@ public class ReservationService {
         reservation.setUser(user);
         reservation.setRoute(route);
         reservation.setSeats(seats);
+        reservation.setAwardedPoints(awardedPoints);
+        reservation.setTravelDepartureTime(occurrence.departureTime());
+        reservation.setTravelArrivalTime(occurrence.arrivalTime());
 
         return reservationRepository.save(reservation);
     }
@@ -149,12 +174,19 @@ public class ReservationService {
         if (reservation.getRoute() == null) {
             throw new IllegalArgumentException("Ta transakcja nie jest rezerwacja biletu");
         }
-        if (!reservation.getRoute().getDepartureTime().isAfter(LocalDateTime.now().plusHours(24))) {
+        LocalDateTime departureTime = reservation.getTravelDepartureTime() == null
+                ? reservation.getRoute().getDepartureTime()
+                : reservation.getTravelDepartureTime();
+        if (!departureTime.isAfter(LocalDateTime.now().plusHours(24))) {
             throw new IllegalArgumentException("Rezerwacje mozna anulowac najpozniej 24 godziny przed odjazdem");
         }
 
         Wallet wallet = getOrCreateWallet(currentUser);
         wallet.setMoney(wallet.getMoney().add(BigDecimal.valueOf(reservation.getAmount())));
+        int pointsToReverse = reservation.getAwardedPoints() == null ? 0 : reservation.getAwardedPoints();
+        int updatedPoints = (wallet.getPoints() == null ? 0 : wallet.getPoints()) - pointsToReverse;
+        wallet.setPoints(updatedPoints);
+        currentUser.setPoints(updatedPoints);
         walletRepository.save(wallet);
         reservationRepository.delete(reservation);
     }

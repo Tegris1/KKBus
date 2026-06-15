@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Navigate, Routes, Route } from "react-router-dom";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,6 +24,7 @@ import DepositPage from "../pages/DepositPage/DepositPage.tsx";
 import EmployeeSchedulePage from "../pages/EmployeeSchedulePage/EmployeeSchedulePage";
 import RouteCreatePage from "../pages/RouteCreatePage/RouteCreatePage";
 import ReportsPage from "../pages/ReportsPage/ReportsPage";
+import LoyaltyPage from "../pages/LoyaltyPage/LoyaltyPage";
 
 const App: React.FC = () => {
   return (
@@ -33,12 +34,16 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route
-            path="/add-transaction"
+            path="/route-search"
             element={
               <PrivateRoute>
                 <RouteSearchPage />
               </PrivateRoute>
             }
+          />
+          <Route
+            path="/add-transaction"
+            element={<Navigate to="/route-search" replace />}
           />
           <Route
             path="/transactions"
@@ -64,6 +69,14 @@ const App: React.FC = () => {
                 </PrivateRoute>
                 }
             />
+          <Route
+            path="/loyalty"
+            element={
+              <PrivateRoute>
+                <LoyaltyPage />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/employee-schedule"
             element={

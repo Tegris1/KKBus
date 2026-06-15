@@ -25,6 +25,9 @@ const Navbar: React.FC = () => {
                 <li>
                     <Link to={"deposit"}>Portfel</Link>
                 </li>
+                <li>
+                  <Link to="/loyalty">Nagrody</Link>
+                </li>
                 {isEmployee && (
                   <li>
                     <Link to="/employee-schedule">Grafik</Link>

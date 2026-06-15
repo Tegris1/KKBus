@@ -42,10 +42,7 @@ class ReportServiceTest {
                 reservation(route, 1, 30.0)
         );
 
-        when(routeRepository.findAllByDepartureTimeGreaterThanEqualAndDepartureTimeLessThanOrderByDepartureTime(
-                LocalDateTime.of(2026, 6, 1, 0, 0),
-                LocalDateTime.of(2026, 7, 1, 0, 0)
-        )).thenReturn(List.of(route));
+        when(routeRepository.findAll()).thenReturn(List.of(route));
         when(reservationRepository.findAllByRouteIn(List.of(route))).thenReturn(reservations);
         when(userRepository.findAllByRoleOrderByUsername(Role.EMPLOYEE)).thenReturn(List.of(driver));
 
@@ -53,19 +50,24 @@ class ReportServiceTest {
 
         assertEquals(LocalDate.of(2026, 6, 1), report.periodStart());
         assertEquals(LocalDate.of(2026, 6, 30), report.periodEnd());
-        assertEquals(1, report.courseCount());
+        assertEquals(2, report.courseCount());
         assertEquals(2, report.soldTickets());
         assertEquals(3, report.passengerCount());
         assertMoney("90.00", report.revenue());
-        assertMoney("40.00", report.fuelCost());
-        assertMoney("50.00", report.profit());
+        assertMoney("80.00", report.fuelCost());
+        assertMoney("10.00", report.profit());
         assertEquals(2, report.courses().getFirst().segments().size());
         assertEquals(3, report.courses().getFirst().segments().getFirst().passengerCount());
         assertEquals("Jan Kowalski", report.courses().getFirst().driverName());
     }
 
     private ReportService service() {
-        return new ReportService(routeRepository, reservationRepository, userRepository);
+        return new ReportService(
+                routeRepository,
+                reservationRepository,
+                userRepository,
+                new WeeklyRouteService()
+        );
     }
 
     private User driver() {
@@ -83,6 +85,7 @@ class ReportServiceTest {
         route.setIntermediateStops(List.of("Katowice"));
         route.setDestination("Wroclaw");
         route.setDepartureTime(LocalDateTime.of(2026, 6, 20, 8, 0));
+        route.setArrivalTime(LocalDateTime.of(2026, 6, 20, 11, 0));
         route.setDriverId(driverId);
         route.setBusId((short) 101);
         route.setFuelCost(new BigDecimal("40.00"));

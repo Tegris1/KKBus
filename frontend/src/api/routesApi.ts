@@ -15,6 +15,10 @@ interface RouteResponse {
   reservation?: unknown;
 }
 
+interface ReservationResponse {
+  awardedPoints?: number;
+}
+
 const normalizeRoute = (route: RouteResponse): Route => ({
   id: route.id,
   origin: route.origin,
@@ -40,8 +44,14 @@ export const routesApi = {
     return response.data.map(normalizeRoute);
   },
 
-  createReservation: async (reservation: Reservation): Promise<void> => {
-    await axiosClient.post("reservations", reservation);
+  createReservation: async (
+    reservation: Reservation,
+  ): Promise<ReservationResponse> => {
+    const response = await axiosClient.post<ReservationResponse>(
+      "reservations",
+      reservation,
+    );
+    return response.data;
   },
 
   createRoute: async (route: RouteRequest): Promise<Route> => {

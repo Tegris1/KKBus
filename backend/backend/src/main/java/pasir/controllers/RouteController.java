@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pasir.dtos.RouteDto;
+import pasir.dtos.RouteOccurrenceDto;
 import pasir.model.Route;
 import pasir.services.RouteService;
 
@@ -31,7 +32,7 @@ public class RouteController {
     }
 
     @GetMapping(params = {"destination","origin"})
-    public ResponseEntity<List<Route>> getAllRoutesByDestinationAndOrigin(@Valid @RequestParam String destination, @Valid @RequestParam String origin) {
+    public ResponseEntity<List<RouteOccurrenceDto>> getAllRoutesByDestinationAndOrigin(@Valid @RequestParam String destination, @Valid @RequestParam String origin) {
         return ResponseEntity.ok(routeService.findAllByDestinationAndOrigin(destination, origin));
     }
 

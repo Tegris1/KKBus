@@ -29,6 +29,9 @@ public class Reservation {
     private String notes;
     private LocalDateTime timestamp;
     private Integer seats;
+    private Integer awardedPoints = 0;
+    private LocalDateTime travelDepartureTime;
+    private LocalDateTime travelArrivalTime;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

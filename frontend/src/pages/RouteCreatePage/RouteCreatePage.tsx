@@ -118,6 +118,7 @@ const RouteCreatePage = () => {
       <header className={styles.header}>
         <p className={styles.label}>Zarzadzanie trasami</p>
         <h1>Dodaj nowa trase</h1>
+        <p>Podany termin będzie pierwszym kursem serii powtarzanej co tydzień.</p>
       </header>
 
       <form className={styles.form} onSubmit={(event) => void handleSubmit(event)}>

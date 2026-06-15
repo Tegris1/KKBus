@@ -55,10 +55,16 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [seats, setSeats] = useState(1);
   const price = Number(route.price ?? 0);
+  const hasDeparted = new Date(route.departureTime).getTime() <= Date.now();
   const intermediateStops = route.intermediateStops.filter(Boolean);
   const routePath = [route.origin, ...intermediateStops, route.destination];
 
   const handleReservation = async () => {
+    if (hasDeparted) {
+      toast.error("Nie można zarezerwować zakończonego kursu.");
+      return;
+    }
+
     if (!isAuthenticated) {
       toast.error("Musisz być zalogowany, aby zarezerwować trasę!");
       return;
@@ -66,11 +72,14 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
 
     setIsLoading(true);
     try {
-      await routesApi.createReservation({
+      const reservation = await routesApi.createReservation({
         routeId: route.id,
         seats,
+        travelDepartureTime: route.departureTime,
       });
-      toast.success("Rezerwacja dodana!");
+      toast.success(
+        `Rezerwacja dodana! Zdobyto ${reservation.awardedPoints ?? 0} pkt.`,
+      );
       onReservationSuccess?.();
       setSeats(1);
     } catch (error: unknown) {
@@ -90,6 +99,7 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
     <div className={styles["route-block"]}>
       <div className={styles["route-header"]}>
         <h3>{routePath.join(" -> ")}</h3>
+        <span>kurs tygodniowy</span>
       </div>
 
       <div className={styles["route-details"]}>
@@ -135,10 +145,20 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
         <button
           className={styles["reserve-button"]}
           onClick={handleReservation}
-          disabled={!isAuthenticated || isLoading}
-          title={!isAuthenticated ? "Zaloguj się, aby zarezerwować" : ""}
+          disabled={!isAuthenticated || isLoading || hasDeparted}
+          title={
+            hasDeparted
+              ? "Ten kurs już się odbył"
+              : !isAuthenticated
+                ? "Zaloguj się, aby zarezerwować"
+                : ""
+          }
         >
-          {isLoading ? "Rezerwuję..." : "Zarezerwuj"}
+          {hasDeparted
+            ? "Kurs zakończony"
+            : isLoading
+              ? "Rezerwuję..."
+              : "Zarezerwuj"}
         </button>
       </div>
     </div>

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface RouteRepository extends JpaRepository<Route, Long> {
-    List<Route> findByDestinationAndOrigin(String destination, String origin);
+    List<Route> findByDestinationAndOriginOrderByDepartureTimeDesc(String destination, String origin);
 
     List<Route> findAllByDepartureTimeGreaterThanEqualAndDepartureTimeLessThanOrderByDepartureTime(
             LocalDateTime periodStart,

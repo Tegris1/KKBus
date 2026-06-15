@@ -159,7 +159,7 @@ const ReportsPage = () => {
           ) : (
             <div className={styles.courseList}>
               {report.courses.map((course) => (
-                <article key={course.routeId} className={styles.course}>
+                <article key={`${course.routeId}-${course.departureTime}`} className={styles.course}>
                   <header>
                     <div>
                       <h3>{course.origin} → {course.destination}</h3>

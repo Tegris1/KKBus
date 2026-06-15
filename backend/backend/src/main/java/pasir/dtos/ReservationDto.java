@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 import pasir.model.TransactionType;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 public class ReservationDto {
@@ -14,6 +16,7 @@ public class ReservationDto {
 
     @Min(value = 1, message = "Liczba miejsc nie moze byc mniejsza od 1")
     private Integer seats;
+    private LocalDateTime travelDepartureTime;
 
     @Min(value = 1, message = "Kwota nie moze byc mniejsza od 1")
     private Double amount;

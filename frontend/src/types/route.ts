@@ -15,6 +15,7 @@ export interface Route {
 export interface Reservation {
   routeId: number;
   seats: number;
+  travelDepartureTime: string;
 }
 
 export interface RouteRequest {

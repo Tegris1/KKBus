@@ -36,6 +36,7 @@ public class ReportService {
     private final RouteRepository routeRepository;
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
+    private final WeeklyRouteService weeklyRouteService;
 
     @Transactional(readOnly = true)
     public TicketReportDto generate(
@@ -45,28 +46,40 @@ public class ReportService {
             Short busId
     ) {
         DateRange range = resolveRange(period, referenceDate);
-        List<Route> routes = routeRepository
-                .findAllByDepartureTimeGreaterThanEqualAndDepartureTimeLessThanOrderByDepartureTime(
-                        range.start().atStartOfDay(),
-                        range.endExclusive().atStartOfDay()
-                ).stream()
+        List<Route> routes = routeRepository.findAll().stream()
                 .filter(route -> driverId == null || driverId.equals(route.getDriverId()))
                 .filter(route -> busId == null || busId.equals(route.getBusId()))
                 .toList();
 
-        Map<Long, List<Reservation>> reservationsByRoute = routes.isEmpty()
+        List<Reservation> reservations = routes.isEmpty()
+                ? List.of()
+                : reservationRepository.findAllByRouteIn(routes);
+        Map<OccurrenceKey, List<Reservation>> reservationsByOccurrence = reservations.isEmpty()
                 ? Collections.emptyMap()
-                : reservationRepository.findAllByRouteIn(routes).stream()
-                        .collect(Collectors.groupingBy(reservation -> reservation.getRoute().getId()));
+                : reservations.stream().collect(Collectors.groupingBy(reservation -> new OccurrenceKey(
+                        reservation.getRoute().getId(),
+                        reservation.getTravelDepartureTime() == null
+                                ? reservation.getRoute().getDepartureTime()
+                                : reservation.getTravelDepartureTime()
+                )));
         Map<Long, String> driverNames = userRepository.findAllByRoleOrderByUsername(Role.EMPLOYEE).stream()
                 .collect(Collectors.toMap(user -> user.getId(), user -> user.getUsername()));
 
         List<CourseReportDto> courses = routes.stream()
-                .map(route -> buildCourseReport(
+                .flatMap(route -> weeklyRouteService.occurrencesBetween(
                         route,
-                        reservationsByRoute.getOrDefault(route.getId(), List.of()),
+                        range.start().atStartOfDay(),
+                        range.endExclusive().atStartOfDay()
+                ).stream().map(occurrence -> buildCourseReport(
+                        route,
+                        occurrence,
+                        reservationsByOccurrence.getOrDefault(
+                                new OccurrenceKey(route.getId(), occurrence.departureTime()),
+                                List.of()
+                        ),
                         driverNames.getOrDefault(route.getDriverId(), "Nieznany kierowca")
-                ))
+                )))
+                .sorted((left, right) -> left.departureTime().compareTo(right.departureTime()))
                 .toList();
 
         int soldTickets = courses.stream().mapToInt(CourseReportDto::soldTickets).sum();
@@ -107,6 +120,7 @@ public class ReportService {
 
     private CourseReportDto buildCourseReport(
             Route route,
+            WeeklyRouteService.RouteOccurrence occurrence,
             List<Reservation> reservations,
             String driverName
     ) {
@@ -136,7 +150,7 @@ public class ReportService {
                 route.getId(),
                 route.getOrigin(),
                 route.getDestination(),
-                route.getDepartureTime(),
+                occurrence.departureTime(),
                 route.getBusId(),
                 route.getDriverId(),
                 driverName,
@@ -173,5 +187,8 @@ public class ReportService {
     }
 
     private record DateRange(LocalDate start, LocalDate endExclusive) {
+    }
+
+    private record OccurrenceKey(Long routeId, LocalDateTime departureTime) {
     }
 }

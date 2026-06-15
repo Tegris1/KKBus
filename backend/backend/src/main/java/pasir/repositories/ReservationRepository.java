@@ -23,4 +23,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findAllByRouteIn(List<Route> routes);
 
+    boolean existsByUserAndRoute(User user, Route route);
+
 }

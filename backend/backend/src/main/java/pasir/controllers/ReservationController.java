@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@PreAuthorize("hasRole('USER')")
+@PreAuthorize("isAuthenticated()")
 public class ReservationController {
 
     @Autowired

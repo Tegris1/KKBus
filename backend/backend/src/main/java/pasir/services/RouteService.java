@@ -4,11 +4,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import pasir.Mappers.RouteMapper;
 import pasir.dtos.RouteDto;
+import pasir.dtos.RouteOccurrenceDto;
 import pasir.model.Role;
 import pasir.model.Route;
 import pasir.repositories.RouteRepository;
 import pasir.repositories.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -17,6 +19,7 @@ public class RouteService {
     private final RouteRepository routeRepository;
     private final RouteMapper routeMapper;
     private final UserRepository userRepository;
+    private final WeeklyRouteService weeklyRouteService;
 
     public Route findById(long id) {
         return routeRepository.findById(id).orElse(null);
@@ -33,8 +36,19 @@ public class RouteService {
         return routeRepository.save(route);
     }
 
-    public List<Route> findAllByDestinationAndOrigin(String destination, String origin) {
-        return routeRepository.findByDestinationAndOrigin(destination, origin);
+    public List<RouteOccurrenceDto> findAllByDestinationAndOrigin(String destination, String origin) {
+        var now = LocalDateTime.now();
+        return routeRepository.findByDestinationAndOriginOrderByDepartureTimeDesc(destination, origin).stream()
+                .map(route -> {
+                    var occurrence = weeklyRouteService.nextOccurrence(route, now);
+                    return RouteOccurrenceDto.from(
+                            route,
+                            occurrence.departureTime(),
+                            occurrence.arrivalTime()
+                    );
+                })
+                .sorted((left, right) -> left.departureTime().compareTo(right.departureTime()))
+                .toList();
     }
 
     public Route updateRoute(RouteDto routeDto, Long id) {

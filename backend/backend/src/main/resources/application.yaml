@@ -17,3 +17,7 @@ spring:
     secret: ${JWT_SECRET}
     accessTokenExpiration: 900
     refreshTokenExpiration: 604800
+
+app:
+  mock-data:
+    enabled: false
