@@ -32,6 +32,11 @@ public class Route {
     private List<String> intermediateStops = new ArrayList<>();
 
     private BigDecimal price;
+    private Long driverId;
+    private Short busId;
+
+    @Column(precision = 19, scale = 2)
+    private BigDecimal fuelCost = BigDecimal.ZERO;
 
 
 }

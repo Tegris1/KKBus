@@ -11,6 +11,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   roles: string[];
   isEmployee: boolean;
+  isSecretary: boolean;
   isAdmin: boolean;
   canManageRoutes: boolean;
   login: (token: string) => string[];
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   roles: [],
   isEmployee: false,
+  isSecretary: false,
   isAdmin: false,
   canManageRoutes: false,
   login: () => [],
@@ -111,6 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [logout]);
 
   const isEmployee = roles.includes("EMPLOYEE");
+  const isSecretary = roles.includes("SECRETARY");
   const isAdmin = roles.includes("ADMIN");
   const canManageRoutes = isAdmin || isEmployee;
 
@@ -119,6 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       isAuthenticated,
       roles,
       isEmployee,
+      isSecretary,
       isAdmin,
       canManageRoutes,
       login,
@@ -128,6 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       isAuthenticated,
       roles,
       isEmployee,
+      isSecretary,
       isAdmin,
       canManageRoutes,
       login,

@@ -7,6 +7,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pasir.dtos.ReservationDto;
+import pasir.dtos.ReservationTicketDto;
 import pasir.model.Reservation;
 import pasir.model.Route;
 import pasir.model.TransactionType;
@@ -43,6 +44,9 @@ public class ReservationService {
 
         if(!(reservation.getUser().getEmail().equals(getCurrentUser().getEmail()))) {
             throw new AccessDeniedException("Nie masz dostepu do tej transakcji");
+        }
+        if (reservation.getRoute() != null) {
+            throw new IllegalArgumentException("Rezerwacji biletu nie mozna edytowac");
         }
         reservation.setAmount(reservationDto.getAmount());
         reservation.setType(reservationDto.getType());
@@ -117,6 +121,7 @@ public class ReservationService {
                 });
     }
 
+    @Transactional
     public void deleteTransaction(Long id) {
         Reservation reservation = reservationRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Nie istnieje: " + id)
@@ -124,7 +129,34 @@ public class ReservationService {
         if(!(reservation.getUser().getEmail().equals(getCurrentUser().getEmail()))) {
             throw new AccessDeniedException("Nie masz dostepu");
         }
+        if (reservation.getRoute() != null) {
+            cancelReservation(id);
+            return;
+        }
         reservationRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void cancelReservation(Long id) {
+        Reservation reservation = reservationRepository.findByIdForUpdate(id).orElseThrow(
+                () -> new EntityNotFoundException("Nie znaleziono rezerwacji o ID " + id)
+        );
+        User currentUser = getCurrentUser();
+
+        if (!reservation.getUser().getEmail().equals(currentUser.getEmail())) {
+            throw new AccessDeniedException("Nie masz dostepu do tej rezerwacji");
+        }
+        if (reservation.getRoute() == null) {
+            throw new IllegalArgumentException("Ta transakcja nie jest rezerwacja biletu");
+        }
+        if (!reservation.getRoute().getDepartureTime().isAfter(LocalDateTime.now().plusHours(24))) {
+            throw new IllegalArgumentException("Rezerwacje mozna anulowac najpozniej 24 godziny przed odjazdem");
+        }
+
+        Wallet wallet = getOrCreateWallet(currentUser);
+        wallet.setMoney(wallet.getMoney().add(BigDecimal.valueOf(reservation.getAmount())));
+        walletRepository.save(wallet);
+        reservationRepository.delete(reservation);
     }
 
     private User getCurrentUser() {
@@ -142,5 +174,12 @@ public class ReservationService {
     public List<Reservation> getAllTransactions(){
         User user = getCurrentUser();
         return reservationRepository.findAllByUser(user);
+    }
+
+    public List<ReservationTicketDto> getRouteReservations(){
+        User user = getCurrentUser();
+        return reservationRepository.findAllByUserAndRouteIsNotNull(user).stream()
+                .map(ReservationTicketDto::from)
+                .toList();
     }
 }

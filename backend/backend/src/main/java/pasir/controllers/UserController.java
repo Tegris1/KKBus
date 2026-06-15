@@ -5,8 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pasir.dtos.RoleUpdateDto;
+import pasir.dtos.DriverOptionDto;
 import pasir.dtos.UserDto;
 import pasir.model.User;
+import pasir.model.Role;
 import pasir.services.UserService;
 
 import jakarta.validation.Valid;
@@ -22,6 +24,14 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.findAll());
+    }
+
+    @GetMapping("/drivers")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    public ResponseEntity<List<DriverOptionDto>> getDrivers() {
+        return ResponseEntity.ok(userService.findByRole(Role.EMPLOYEE).stream()
+                .map(DriverOptionDto::from)
+                .toList());
     }
 
     @PutMapping("/{id}")

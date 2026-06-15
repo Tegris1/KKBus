@@ -82,6 +82,10 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll();
     }
 
+    public List<User> findByRole(Role role) {
+        return userRepository.findAllByRoleOrderByUsername(role);
+    }
+
     public User updateUserRole(Long id, Role role) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono uĹĽytkownika"));

@@ -9,9 +9,10 @@ export interface TicketCardProps {
     totalPrice: number;
     status: 'nowy' | 'zakupiony' | 'anulowany' | 'ukończony';
     onCancel: (id: number) => void;
+    isCancelling?: boolean;
 }
 
-const TicketCard = ({ id, origin, destination, departureTime, seatCount, totalPrice, status, onCancel }: TicketCardProps) => {
+const TicketCard = ({ id, origin, destination, departureTime, seatCount, totalPrice, status, onCancel, isCancelling = false }: TicketCardProps) => {
     const departureDate = new Date(departureTime);
     const now = new Date();
 
@@ -50,8 +51,9 @@ const TicketCard = ({ id, origin, destination, departureTime, seatCount, totalPr
                     onClick={() => onCancel(id)} 
                     className={styles["cancel-btn"]}
                     title="Anuluj rezerwację (możliwe do 24h przed odjazdem)"
+                    disabled={isCancelling}
                 >
-                    Anuluj rezerwację
+                    {isCancelling ? "Anulowanie..." : "Anuluj rezerwację"}
                 </button>
             )}
             

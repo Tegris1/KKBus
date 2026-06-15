@@ -1,7 +1,9 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { routesApi } from "../../api/routesApi";
+import { usersApi } from "../../api/usersApi";
 import { RouteRequest } from "../../types/route";
+import { DriverOption } from "../../types/user";
 import styles from "./RouteCreatePage.module.scss";
 
 const EMPTY_ROUTE: RouteRequest = {
@@ -11,11 +13,27 @@ const EMPTY_ROUTE: RouteRequest = {
   arrivalTime: "",
   intermediateStops: [],
   price: 0,
+  driverId: 0,
+  busId: 0,
+  fuelCost: 0,
 };
 
 const RouteCreatePage = () => {
   const [form, setForm] = useState<RouteRequest>(EMPTY_ROUTE);
   const [saving, setSaving] = useState(false);
+  const [drivers, setDrivers] = useState<DriverOption[]>([]);
+
+  useEffect(() => {
+    const loadDrivers = async () => {
+      try {
+        setDrivers(await usersApi.getDrivers());
+      } catch {
+        toast.error("Nie udalo sie pobrac listy kierowcow.");
+      }
+    };
+
+    void loadDrivers();
+  }, []);
 
   const updateForm = <Key extends keyof RouteRequest>(
     key: Key,
@@ -189,6 +207,48 @@ const RouteCreatePage = () => {
             type="datetime-local"
             value={form.arrivalTime}
             onChange={(event) => updateForm("arrivalTime", event.target.value)}
+            required
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label htmlFor="driverId">Kierowca</label>
+          <select
+            id="driverId"
+            value={form.driverId || ""}
+            onChange={(event) => updateForm("driverId", Number(event.target.value))}
+            required
+          >
+            <option value="">-- Wybierz kierowce --</option>
+            {drivers.map((driver) => (
+              <option key={driver.id} value={driver.id}>
+                {driver.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className={styles.field}>
+          <label htmlFor="busId">Numer pojazdu</label>
+          <input
+            id="busId"
+            type="number"
+            min="1"
+            value={form.busId || ""}
+            onChange={(event) => updateForm("busId", Number(event.target.value))}
+            required
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label htmlFor="fuelCost">Koszt paliwa</label>
+          <input
+            id="fuelCost"
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.fuelCost || ""}
+            onChange={(event) => updateForm("fuelCost", Number(event.target.value))}
             required
           />
         </div>

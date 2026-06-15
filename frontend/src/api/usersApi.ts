@@ -1,5 +1,5 @@
 import axiosClient from "./axiosClient";
-import { User, UserRole } from "../types/user";
+import { DriverOption, User, UserRole } from "../types/user";
 
 export const usersApi = {
   getUsers: async (): Promise<User[]> => {
@@ -9,6 +9,11 @@ export const usersApi = {
 
   updateRole: async (id: number, role: UserRole): Promise<User> => {
     const response = await axiosClient.put<User>(`/users/${id}/role`, { role });
+    return response.data;
+  },
+
+  getDrivers: async (): Promise<DriverOption[]> => {
+    const response = await axiosClient.get<DriverOption[]>("/users/drivers");
     return response.data;
   },
 };

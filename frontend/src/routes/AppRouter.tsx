@@ -17,11 +17,13 @@ import EmployeeRoute from "../components/Route/EmployeeRoute";
 import PrivateRoute from "../components/Route/PrivateRoute";
 import PublicRoute from "../components/Route/PublicRoute";
 import StaffRoute from "../components/Route/StaffRoute";
+import SecretaryRoute from "../components/Route/SecretaryRoute";
 import AdminSchedulesPage from "../pages/AdminSchedulesPage/AdminSchedulesPage";
 import AdminUserRolesPage from "../pages/AdminUserRolesPage/AdminUserRolesPage";
 import DepositPage from "../pages/DepositPage/DepositPage.tsx";
 import EmployeeSchedulePage from "../pages/EmployeeSchedulePage/EmployeeSchedulePage";
 import RouteCreatePage from "../pages/RouteCreatePage/RouteCreatePage";
+import ReportsPage from "../pages/ReportsPage/ReportsPage";
 
 const App: React.FC = () => {
   return (
@@ -84,6 +86,14 @@ const App: React.FC = () => {
               <AdminRoute>
                 <AdminSchedulesPage />
               </AdminRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <SecretaryRoute>
+                <ReportsPage />
+              </SecretaryRoute>
             }
           />
           <Route

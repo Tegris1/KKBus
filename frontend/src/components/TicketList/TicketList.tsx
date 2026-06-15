@@ -1,29 +1,84 @@
-import TicketCard, { type TicketCardProps } from "./TicketCard";
+import { useEffect, useState } from "react";
+import { reservationsApi, type Reservation } from "../../api/reservationsApi";
+import TicketCard from "./TicketCard";
 import styles from "./TicketList.module.scss";
 import { toast } from "react-toastify";
 
-const MOCK_RESERVATIONS: Omit<TicketCardProps, "onCancel">[] = [
-    { id: 101, origin: "Kraków", destination: "Katowice", departureTime: "2026-06-20T08:00:00", seatCount: 2, totalPrice: 30.00, status: "zakupiony" },
-    { id: 105, origin: "Katowice", destination: "Kraków", departureTime: "2026-06-22T16:30:00", seatCount: 1, totalPrice: 15.00, status: "zakupiony" },
-    { id: 109, origin: "Kraków", destination: "Katowice", departureTime: "2026-05-10T12:00:00", seatCount: 1, totalPrice: 15.00, status: "ukończony" }
-];
+interface ApiErrorResponse {
+    response?: {
+        data?: {
+            message?: string;
+            error?: string;
+        };
+    };
+}
 
 const TicketList = () => {
-    const handleCancelRequest = (id: number) => {
-        // Symulacja akcji anulowania zgodnie z transactionform.txt [5]
-        toast.info(`Przetwarzanie anulowania rezerwacji nr ${id}...`);
-        console.log("Anulowano bilet o ID:", id);
+    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [cancellingId, setCancellingId] = useState<number | null>(null);
+
+    useEffect(() => {
+        const loadReservations = async () => {
+            try {
+                setReservations(await reservationsApi.getAll());
+            } catch {
+                setError("Nie udało się pobrać rezerwacji.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        void loadReservations();
+    }, []);
+
+    const handleCancelRequest = async (id: number) => {
+        setCancellingId(id);
+
+        try {
+            await reservationsApi.cancel(id);
+            setReservations((current) => current.filter((reservation) => reservation.id !== id));
+            toast.success("Rezerwacja została anulowana, a środki zwrócone do portfela.");
+        } catch (error: unknown) {
+            const response = (error as ApiErrorResponse).response;
+            toast.error(
+                response?.data?.message ||
+                response?.data?.error ||
+                "Nie udało się anulować rezerwacji."
+            );
+        } finally {
+            setCancellingId(null);
+        }
     };
+
+    if (isLoading) return <p>Ładowanie rezerwacji...</p>;
+    if (error) return <p>{error}</p>;
+    if (reservations.length === 0) return <p>Nie masz żadnych rezerwacji.</p>;
 
     return (
         <div className={styles["tickets-grid"]}>
-            {MOCK_RESERVATIONS.map(res => (
-                <TicketCard 
-                    key={res.id} 
-                    {...res} 
-                    onCancel={handleCancelRequest} 
-                />
-            ))}
+            {reservations.map((reservation) => {
+                const departureTime = reservation.departureTime;
+                const status = new Date(departureTime).getTime() > Date.now()
+                    ? "zakupiony"
+                    : "ukończony";
+
+                return (
+                    <TicketCard
+                        key={reservation.id}
+                        id={reservation.id}
+                        origin={reservation.origin}
+                        destination={reservation.destination}
+                        departureTime={departureTime}
+                        seatCount={reservation.seats ?? 1}
+                        totalPrice={Number(reservation.amount)}
+                        status={status}
+                        onCancel={handleCancelRequest}
+                        isCancelling={cancellingId === reservation.id}
+                    />
+                );
+            })}
         </div>
     );
 };

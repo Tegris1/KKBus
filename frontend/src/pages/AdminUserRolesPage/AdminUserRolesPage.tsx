@@ -4,7 +4,7 @@ import { usersApi } from "../../api/usersApi";
 import { User, UserRole } from "../../types/user";
 import styles from "./AdminUserRolesPage.module.scss";
 
-const ROLES: UserRole[] = ["USER", "EMPLOYEE", "ADMIN"];
+const ROLES: UserRole[] = ["USER", "EMPLOYEE", "SECRETARY", "ADMIN"];
 
 const AdminUserRolesPage = () => {
   const [users, setUsers] = useState<User[]>([]);
