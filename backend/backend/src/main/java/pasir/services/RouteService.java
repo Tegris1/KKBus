@@ -32,6 +32,9 @@ public class RouteService {
     public Route createRoute(RouteDto routeDto) {
         validateDriver(routeDto.getDriverId());
         Route route = routeMapper.toEntity(routeDto);
+        route.setDriverId(routeDto.getDriverId());
+        route.setBusId(routeDto.getBusId());
+        route.setFuelCost(routeDto.getFuelCost());
 
         return routeRepository.save(route);
     }
@@ -56,6 +59,9 @@ public class RouteService {
         Route route = routeRepository.findById(id).orElse(null);
         if (route == null) {return null;}
         Route updatedRoute = routeMapper.update(route, routeDto);
+        updatedRoute.setDriverId(routeDto.getDriverId());
+        updatedRoute.setBusId(routeDto.getBusId());
+        updatedRoute.setFuelCost(routeDto.getFuelCost());
         return routeRepository.save(updatedRoute);
     }
 

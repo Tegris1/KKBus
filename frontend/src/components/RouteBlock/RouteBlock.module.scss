@@ -87,6 +87,7 @@
 
   .reservation-section {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     align-items: flex-end;
     padding-top: 12px;
@@ -136,6 +137,54 @@
         background-color: #ccc;
         cursor: not-allowed;
         opacity: 0.6;
+      }
+    }
+
+    .discount-control {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+
+      small {
+        color: #666;
+      }
+    }
+
+    .discount-button {
+      padding: 9px 14px;
+      border: 1px solid #c58a00;
+      border-radius: 4px;
+      background: #fff8e6;
+      color: #7a5500;
+      font-weight: bold;
+
+      &:hover:not(:disabled),
+      &.active {
+        background: #ffc107;
+        color: #332300;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+    }
+
+    .price-summary {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 95px;
+
+      strong {
+        color: #218838;
+        font-size: 1.15rem;
+      }
+
+      .regular-price {
+        color: #777;
+        font-size: 0.85rem;
+        text-decoration: line-through;
       }
     }
   }

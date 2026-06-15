@@ -3,10 +3,13 @@ package pasir.dtos;
 import pasir.model.Reservation;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 public record ReservationTicketDto(
         Long id,
         Double amount,
+        BigDecimal discountAmount,
+        Integer pointsSpent,
         Integer seats,
         Long routeId,
         String origin,
@@ -17,6 +20,8 @@ public record ReservationTicketDto(
         return new ReservationTicketDto(
                 reservation.getId(),
                 reservation.getAmount(),
+                reservation.getDiscountAmount(),
+                reservation.getPointsSpent(),
                 reservation.getSeats(),
                 reservation.getRoute().getId(),
                 reservation.getRoute().getOrigin(),

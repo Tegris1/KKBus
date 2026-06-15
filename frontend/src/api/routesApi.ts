@@ -15,8 +15,11 @@ interface RouteResponse {
   reservation?: unknown;
 }
 
-interface ReservationResponse {
+export interface ReservationResponse {
+  amount?: number;
   awardedPoints?: number;
+  pointsSpent?: number;
+  discountAmount?: number;
 }
 
 const normalizeRoute = (route: RouteResponse): Route => ({

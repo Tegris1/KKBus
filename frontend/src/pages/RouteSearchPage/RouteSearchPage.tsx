@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { routesApi } from "../../api/routesApi";
 import RouteBlock from "../../components/RouteBlock/RouteBlock";
 import { Route } from "../../types/route";
 import styles from "./RouteSearchPage.module.scss";
+import { getWalletInfo } from "../../api/depositApi";
 
 const CITIES = [
   "Warszawa",
@@ -31,6 +32,20 @@ const RouteSearchPage = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [availablePoints, setAvailablePoints] = useState<number | null>(null);
+
+  const refreshPoints = useCallback(async () => {
+    try {
+      const wallet = await getWalletInfo();
+      setAvailablePoints(Number(wallet.points ?? 0));
+    } catch {
+      setAvailablePoints(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshPoints();
+  }, [refreshPoints]);
 
   const handleCityChange = (field: "origin" | "destination", value: string) => {
     setCitySelection((prev) => ({
@@ -130,9 +145,8 @@ const RouteSearchPage = () => {
                 <RouteBlock
                   key={route.id}
                   route={route}
-                  onReservationSuccess={() => {
-                    toast.success("Rezerwacja udana!");
-                  }}
+                  availablePoints={availablePoints}
+                  onReservationSuccess={refreshPoints}
                 />
               ))}
             </div>

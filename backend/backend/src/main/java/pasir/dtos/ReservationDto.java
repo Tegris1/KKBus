@@ -17,6 +17,7 @@ public class ReservationDto {
     @Min(value = 1, message = "Liczba miejsc nie moze byc mniejsza od 1")
     private Integer seats;
     private LocalDateTime travelDepartureTime;
+    private Boolean usePointsDiscount = false;
 
     @Min(value = 1, message = "Kwota nie moze byc mniejsza od 1")
     private Double amount;

@@ -7,7 +7,8 @@ import styles from "./RouteBlock.module.scss";
 
 interface RouteBlockProps {
   route: Route;
-  onReservationSuccess?: () => void;
+  availablePoints: number | null;
+  onReservationSuccess?: () => Promise<void> | void;
 }
 
 interface ApiErrorResponse {
@@ -50,11 +51,20 @@ const getReservationValidationMessage = (error: unknown) => {
   );
 };
 
-const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
+const RouteBlock = ({
+  route,
+  availablePoints,
+  onReservationSuccess,
+}: RouteBlockProps) => {
   const { isAuthenticated } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const [seats, setSeats] = useState(1);
+  const [usePointsDiscount, setUsePointsDiscount] = useState(false);
   const price = Number(route.price ?? 0);
+  const regularTotal = price * seats;
+  const discountAmount = usePointsDiscount ? Math.min(10, regularTotal) : 0;
+  const finalTotal = regularTotal - discountAmount;
+  const canUseDiscount = availablePoints !== null && availablePoints >= 50;
   const hasDeparted = new Date(route.departureTime).getTime() <= Date.now();
   const intermediateStops = route.intermediateStops.filter(Boolean);
   const routePath = [route.origin, ...intermediateStops, route.destination];
@@ -76,12 +86,17 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
         routeId: route.id,
         seats,
         travelDepartureTime: route.departureTime,
+        usePointsDiscount,
       });
+      const discountMessage = reservation.pointsSpent
+        ? ` Użyto ${reservation.pointsSpent} pkt i obniżono cenę o ${Number(reservation.discountAmount ?? 0).toFixed(2)} PLN.`
+        : "";
       toast.success(
-        `Rezerwacja dodana! Zdobyto ${reservation.awardedPoints ?? 0} pkt.`,
+        `Rezerwacja dodana! Zdobyto ${reservation.awardedPoints ?? 0} pkt.${discountMessage}`,
       );
-      onReservationSuccess?.();
+      await onReservationSuccess?.();
       setSeats(1);
+      setUsePointsDiscount(false);
     } catch (error: unknown) {
       const validationMessage = getReservationValidationMessage(error);
 
@@ -141,6 +156,31 @@ const RouteBlock = ({ route, onReservationSuccess }: RouteBlockProps) => {
             }
             disabled={!isAuthenticated || isLoading}
           />
+        </div>
+        <div className={styles["discount-control"]}>
+          <button
+            type="button"
+            className={`${styles["discount-button"]} ${
+              usePointsDiscount ? styles.active : ""
+            }`}
+            disabled={!canUseDiscount || isLoading || hasDeparted}
+            onClick={() => setUsePointsDiscount((current) => !current)}
+          >
+            {usePointsDiscount ? "Usuń zniżkę" : "Użyj 50 pkt (-10 PLN)"}
+          </button>
+          <small>
+            {availablePoints === null
+              ? "Pobieranie punktów..."
+              : `Dostępne punkty: ${availablePoints}`}
+          </small>
+        </div>
+        <div className={styles["price-summary"]}>
+          {usePointsDiscount && (
+            <span className={styles["regular-price"]}>
+              {regularTotal.toFixed(2)} PLN
+            </span>
+          )}
+          <strong>{finalTotal.toFixed(2)} PLN</strong>
         </div>
         <button
           className={styles["reserve-button"]}

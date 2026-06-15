@@ -106,6 +106,61 @@ class ReservationServiceTest {
     }
 
     @Test
+    void createRouteReservationAppliesPointsDiscountAndAwardsPointsForPaidAmount() {
+        User user = authenticatedUser();
+        Wallet wallet = new Wallet();
+        wallet.setUser(user);
+        wallet.setMoney(new BigDecimal("100.00"));
+        wallet.setPoints(60);
+        user.setWallet(wallet);
+
+        LocalDateTime departure = LocalDateTime.now().plusDays(2).withNano(0);
+        Route route = route(8L, departure, "50.00");
+        ReservationDto dto = reservationDto(route, departure);
+        dto.setUsePointsDiscount(true);
+
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(routeRepository.findById(route.getId())).thenReturn(Optional.of(route));
+        when(walletRepository.findByUserForUpdate(user)).thenReturn(Optional.of(wallet));
+        when(reservationRepository.save(any(Reservation.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Reservation reservation = service().createTransaction(dto);
+
+        assertEquals(0, new BigDecimal("60.00").compareTo(wallet.getMoney()));
+        assertEquals(14, wallet.getPoints());
+        assertEquals(40.0, reservation.getAmount());
+        assertEquals(0, new BigDecimal("10.00").compareTo(reservation.getDiscountAmount()));
+        assertEquals(50, reservation.getPointsSpent());
+        assertEquals(4, reservation.getAwardedPoints());
+    }
+
+    @Test
+    void createRouteReservationRejectsPointsDiscountWhenPointsAreInsufficient() {
+        User user = authenticatedUser();
+        Wallet wallet = new Wallet();
+        wallet.setUser(user);
+        wallet.setMoney(new BigDecimal("100.00"));
+        wallet.setPoints(49);
+        user.setWallet(wallet);
+
+        LocalDateTime departure = LocalDateTime.now().plusDays(2).withNano(0);
+        Route route = route(9L, departure, "50.00");
+        ReservationDto dto = reservationDto(route, departure);
+        dto.setUsePointsDiscount(true);
+
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(routeRepository.findById(route.getId())).thenReturn(Optional.of(route));
+        when(walletRepository.findByUserForUpdate(user)).thenReturn(Optional.of(wallet));
+
+        assertThrows(IllegalArgumentException.class, () -> service().createTransaction(dto));
+
+        assertEquals(49, wallet.getPoints());
+        assertEquals(0, new BigDecimal("100.00").compareTo(wallet.getMoney()));
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
     void cancelReservationRejectsCancellationWithinTwentyFourHours() {
         User user = authenticatedUser();
         Reservation reservation = routeReservation(user, LocalDateTime.now().plusHours(23));
@@ -150,5 +205,24 @@ class ReservationServiceTest {
         reservation.setAmount(30.0);
         reservation.setAwardedPoints(3);
         return reservation;
+    }
+
+    private Route route(Long id, LocalDateTime departure, String price) {
+        Route route = new Route();
+        route.setId(id);
+        route.setOrigin("Krakow");
+        route.setDestination("Warszawa");
+        route.setDepartureTime(departure);
+        route.setArrivalTime(departure.plusHours(4));
+        route.setPrice(new BigDecimal(price));
+        return route;
+    }
+
+    private ReservationDto reservationDto(Route route, LocalDateTime departure) {
+        ReservationDto dto = new ReservationDto();
+        dto.setRouteId(route.getId());
+        dto.setSeats(1);
+        dto.setTravelDepartureTime(departure);
+        return dto;
     }
 }

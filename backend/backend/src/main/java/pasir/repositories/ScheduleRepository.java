@@ -12,5 +12,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     // Możesz tu dodać dedykowane metody, np. szukanie grafiku dla konkretnego kierowcy:
     List<Schedule> findAllByEmployeeId(Long employeeId);
 
+    List<Schedule> findAllByOrderByWorkingDateDesc();
+
     boolean existsByEmployeeIdAndBusIdAndWorkingDate(Long employeeId, Short busId, LocalDate workingDate);
 }

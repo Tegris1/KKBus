@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -30,6 +31,9 @@ public class Reservation {
     private LocalDateTime timestamp;
     private Integer seats;
     private Integer awardedPoints = 0;
+    private Integer pointsSpent = 0;
+    @Column(precision = 19, scale = 2)
+    private BigDecimal discountAmount = BigDecimal.ZERO;
     private LocalDateTime travelDepartureTime;
     private LocalDateTime travelArrivalTime;
 

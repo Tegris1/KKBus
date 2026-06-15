@@ -26,6 +26,9 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class ReservationService {
+    private static final int DISCOUNT_POINTS_COST = 50;
+    private static final BigDecimal POINTS_DISCOUNT_AMOUNT = new BigDecimal("10.00");
+
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final RouteRepository routeRepository;
@@ -99,23 +102,39 @@ public class ReservationService {
         );
 
         BigDecimal totalPrice = route.getPrice().multiply(BigDecimal.valueOf(seats));
-        Wallet wallet = getOrCreateWallet(user);
+        Wallet wallet = getOrCreateWalletForUpdate(user);
+        boolean usePointsDiscount = Boolean.TRUE.equals(reservationDto.getUsePointsDiscount());
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        int pointsSpent = 0;
 
-        if (wallet.getMoney().compareTo(totalPrice) < 0) {
+        if (usePointsDiscount) {
+            int currentPoints = wallet.getPoints() == null ? 0 : wallet.getPoints();
+            if (currentPoints < DISCOUNT_POINTS_COST) {
+                throw new IllegalArgumentException("Brak 50 punktow wymaganych do uzycia znizki");
+            }
+            discountAmount = totalPrice.min(POINTS_DISCOUNT_AMOUNT);
+            pointsSpent = DISCOUNT_POINTS_COST;
+        }
+
+        BigDecimal priceToPay = totalPrice.subtract(discountAmount);
+
+        if (wallet.getMoney().compareTo(priceToPay) < 0) {
             throw new IllegalArgumentException("Brak wystarczajacych srodkow w portfelu");
         }
 
-        wallet.setMoney(wallet.getMoney().subtract(totalPrice));
-        int awardedPoints = totalPrice
+        wallet.setMoney(wallet.getMoney().subtract(priceToPay));
+        int awardedPoints = priceToPay
                 .divide(BigDecimal.TEN, 0, RoundingMode.DOWN)
                 .intValueExact();
-        int updatedPoints = (wallet.getPoints() == null ? 0 : wallet.getPoints()) + awardedPoints;
+        int updatedPoints = (wallet.getPoints() == null ? 0 : wallet.getPoints())
+                - pointsSpent
+                + awardedPoints;
         wallet.setPoints(updatedPoints);
         user.setPoints(updatedPoints);
         walletRepository.save(wallet);
 
         Reservation reservation = new Reservation();
-        reservation.setAmount(totalPrice.doubleValue());
+        reservation.setAmount(priceToPay.doubleValue());
         reservation.setType(TransactionType.EXPENSE);
         reservation.setTags("BILET");
         reservation.setNotes(route.getOrigin() + " -> " + route.getDestination());
@@ -124,6 +143,8 @@ public class ReservationService {
         reservation.setRoute(route);
         reservation.setSeats(seats);
         reservation.setAwardedPoints(awardedPoints);
+        reservation.setPointsSpent(pointsSpent);
+        reservation.setDiscountAmount(discountAmount);
         reservation.setTravelDepartureTime(occurrence.departureTime());
         reservation.setTravelArrivalTime(occurrence.arrivalTime());
 
@@ -161,6 +182,11 @@ public class ReservationService {
         reservationRepository.deleteById(id);
     }
 
+    private Wallet getOrCreateWalletForUpdate(User user) {
+        return walletRepository.findByUserForUpdate(user)
+                .orElseGet(() -> getOrCreateWallet(user));
+    }
+
     @Transactional
     public void cancelReservation(Long id) {
         Reservation reservation = reservationRepository.findByIdForUpdate(id).orElseThrow(
@@ -181,10 +207,13 @@ public class ReservationService {
             throw new IllegalArgumentException("Rezerwacje mozna anulowac najpozniej 24 godziny przed odjazdem");
         }
 
-        Wallet wallet = getOrCreateWallet(currentUser);
+        Wallet wallet = getOrCreateWalletForUpdate(currentUser);
         wallet.setMoney(wallet.getMoney().add(BigDecimal.valueOf(reservation.getAmount())));
         int pointsToReverse = reservation.getAwardedPoints() == null ? 0 : reservation.getAwardedPoints();
-        int updatedPoints = (wallet.getPoints() == null ? 0 : wallet.getPoints()) - pointsToReverse;
+        int pointsToRefund = reservation.getPointsSpent() == null ? 0 : reservation.getPointsSpent();
+        int updatedPoints = (wallet.getPoints() == null ? 0 : wallet.getPoints())
+                - pointsToReverse
+                + pointsToRefund;
         wallet.setPoints(updatedPoints);
         currentUser.setPoints(updatedPoints);
         walletRepository.save(wallet);
