@@ -9,6 +9,9 @@ export interface Route {
   driverId: number;
   busId: number;
   fuelCost: number;
+  busSeats?: number | null;
+  reservedSeats?: number | null;
+  availableSeats?: number | null;
   reservation?: unknown;
 }
 
@@ -17,6 +20,9 @@ export interface Reservation {
   seats: number;
   travelDepartureTime: string;
   usePointsDiscount: boolean;
+  boardingStop: string;
+  alightingStop: string;
+  discountType: "NONE" | "STUDENT" | "CHILD_UNDER_5";
 }
 
 export interface RouteRequest {

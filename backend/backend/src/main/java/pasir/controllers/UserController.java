@@ -27,11 +27,23 @@ public class UserController {
     }
 
     @GetMapping("/drivers")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'SECRETARY')")
     public ResponseEntity<List<DriverOptionDto>> getDrivers() {
         return ResponseEntity.ok(userService.findByRole(Role.EMPLOYEE).stream()
                 .map(DriverOptionDto::from)
                 .toList());
+    }
+
+    @GetMapping("/customers")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY')")
+    public ResponseEntity<List<User>> getCustomers() {
+        return ResponseEntity.ok(userService.findByRole(Role.USER));
+    }
+
+    @PostMapping("/customers")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY')")
+    public ResponseEntity<User> createCustomer(@RequestBody @Valid UserDto dto) {
+        return ResponseEntity.ok(userService.register(dto));
     }
 
     @PutMapping("/{id}")

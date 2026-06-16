@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import pasir.model.TicketDiscountType;
 import pasir.model.TransactionType;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,10 @@ public class ReservationDto {
     private Integer seats;
     private LocalDateTime travelDepartureTime;
     private Boolean usePointsDiscount = false;
+    private Long passengerUserId;
+    private String boardingStop;
+    private String alightingStop;
+    private TicketDiscountType discountType = TicketDiscountType.NONE;
 
     @Min(value = 1, message = "Kwota nie moze byc mniejsza od 1")
     private Double amount;

@@ -21,6 +21,7 @@ import pasir.repositories.UserRepository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @NullMarked
 @Service
@@ -50,6 +51,12 @@ public class UserService implements UserDetailsService {
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setPassword(encoder.encode(dto.getPassword()));
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+        user.setBirthDate(dto.getBirthDate());
+        user.setPhoneNumber(dto.getPhoneNumber());
+        user.setLoyaltyProgram(dto.getLoyaltyProgram() == null || dto.getLoyaltyProgram());
+        user.setCustomerNumber("KK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         user.setPoints(0);
         user.setRole(Role.USER);
 

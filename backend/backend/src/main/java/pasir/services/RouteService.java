@@ -7,8 +7,10 @@ import pasir.dtos.RouteDto;
 import pasir.dtos.RouteOccurrenceDto;
 import pasir.model.Role;
 import pasir.model.Route;
+import pasir.repositories.ReservationRepository;
 import pasir.repositories.RouteRepository;
 import pasir.repositories.UserRepository;
+import pasir.repositories.VehicleRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +21,8 @@ public class RouteService {
     private final RouteRepository routeRepository;
     private final RouteMapper routeMapper;
     private final UserRepository userRepository;
+    private final VehicleRepository vehicleRepository;
+    private final ReservationRepository reservationRepository;
     private final WeeklyRouteService weeklyRouteService;
 
     public Route findById(long id) {
@@ -44,10 +48,21 @@ public class RouteService {
         return routeRepository.findByDestinationAndOriginOrderByDepartureTimeDesc(destination, origin).stream()
                 .map(route -> {
                     var occurrence = weeklyRouteService.nextOccurrence(route, now);
+                    Integer busSeats = route.getBusId() == null
+                            ? null
+                            : vehicleRepository.findByFleetNumber(route.getBusId())
+                                    .map(vehicle -> vehicle.getSeats())
+                                    .orElse(null);
+                    Long reservedSeats = reservationRepository.countReservedSeats(
+                            route,
+                            occurrence.departureTime()
+                    );
                     return RouteOccurrenceDto.from(
                             route,
                             occurrence.departureTime(),
-                            occurrence.arrivalTime()
+                            occurrence.arrivalTime(),
+                            busSeats,
+                            reservedSeats
                     );
                 })
                 .sorted((left, right) -> left.departureTime().compareTo(right.departureTime()))

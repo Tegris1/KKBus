@@ -32,6 +32,36 @@ const getReservationValidationMessage = (error: unknown) => {
   return response.data?.message || response.data?.error || null;
 };
 
+const calculateSegmentPrice = (
+  routePath: string[],
+  boardingStop: string,
+  alightingStop: string,
+  fullRoutePrice: number,
+) => {
+  const from = routePath.indexOf(boardingStop);
+  const to = routePath.indexOf(alightingStop);
+
+  if (from < 0 || to < 0 || to <= from || routePath.length <= 2) {
+    return fullRoutePrice;
+  }
+
+  const minPrice = 12;
+  const maxPrice = fullRoutePrice || 15;
+
+  if (maxPrice < minPrice) {
+    return maxPrice;
+  }
+
+  const segmentCount = routePath.length - 1;
+  const selectedSegments = to - from;
+  return Number(
+    (
+      minPrice +
+      ((maxPrice - minPrice) * selectedSegments) / segmentCount
+    ).toFixed(2),
+  );
+};
+
 const RouteBlock = ({
   route,
   availablePoints,
@@ -42,14 +72,52 @@ const RouteBlock = ({
   const [isLoading, setIsLoading] = useState(false);
   const [seats, setSeats] = useState(1);
   const [usePointsDiscount, setUsePointsDiscount] = useState(false);
-  const price = Number(route.price ?? 0);
-  const regularTotal = price * seats;
-  const discountAmount = usePointsDiscount ? Math.min(10, regularTotal) : 0;
-  const finalTotal = regularTotal - discountAmount;
-  const canUseDiscount = availablePoints !== null && availablePoints >= 50;
-  const hasDeparted = new Date(route.departureTime).getTime() <= Date.now();
+  const [boardingStop, setBoardingStop] = useState(route.origin);
+  const [alightingStop, setAlightingStop] = useState(route.destination);
+  const [discountType, setDiscountType] = useState<"NONE" | "STUDENT" | "CHILD_UNDER_5">("NONE");
   const intermediateStops = route.intermediateStops.filter(Boolean);
   const routePath = [route.origin, ...intermediateStops, route.destination];
+  const price = Number(route.price ?? 0);
+  const selectedSegmentPrice = calculateSegmentPrice(
+    routePath,
+    boardingStop,
+    alightingStop,
+    price,
+  );
+  const fullRouteTotal = price * seats;
+  const regularTotal = selectedSegmentPrice * seats;
+  const passengerDiscountTotal =
+    discountType === "STUDENT"
+      ? regularTotal * 0.3
+      : discountType === "CHILD_UNDER_5"
+        ? regularTotal
+        : 0;
+  const totalAfterPassengerDiscount = regularTotal - passengerDiscountTotal;
+  const pointsDiscountAmount = usePointsDiscount
+    ? Math.min(10, totalAfterPassengerDiscount)
+    : 0;
+  const finalTotal = totalAfterPassengerDiscount - pointsDiscountAmount;
+  const hasSegmentPriceChange = regularTotal !== fullRouteTotal;
+  const hasAnyDiscount =
+    hasSegmentPriceChange || passengerDiscountTotal > 0 || pointsDiscountAmount > 0;
+  const displayedOriginalTotal = hasSegmentPriceChange ? fullRouteTotal : regularTotal;
+  const canUseDiscount = availablePoints !== null && availablePoints >= 50;
+  const hasDeparted = new Date(route.departureTime).getTime() <= Date.now();
+  const availableSeats = route.availableSeats ?? null;
+  const hasNoSeats = availableSeats !== null && availableSeats <= 0;
+  const exceedsAvailableSeats = availableSeats !== null && seats > availableSeats;
+  const boardingStopIndex = routePath.indexOf(boardingStop);
+  const alightingOptions = routePath.slice(Math.max(1, boardingStopIndex + 1));
+
+  const handleBoardingStopChange = (nextBoardingStop: string) => {
+    setBoardingStop(nextBoardingStop);
+
+    const nextBoardingIndex = routePath.indexOf(nextBoardingStop);
+    const currentAlightingIndex = routePath.indexOf(alightingStop);
+    if (currentAlightingIndex <= nextBoardingIndex) {
+      setAlightingStop(routePath[nextBoardingIndex + 1] ?? route.destination);
+    }
+  };
 
   const formatDateTime = (value: string) => {
     const date = new Date(value);
@@ -78,6 +146,16 @@ const RouteBlock = ({
       return;
     }
 
+    if (hasNoSeats) {
+      toast.error(t("route.noSeats"));
+      return;
+    }
+
+    if (exceedsAvailableSeats) {
+      toast.error(t("route.tooManySeats"));
+      return;
+    }
+
     setIsLoading(true);
     try {
       const reservation = await routesApi.createReservation({
@@ -85,6 +163,9 @@ const RouteBlock = ({
         seats,
         travelDepartureTime: route.departureTime,
         usePointsDiscount,
+        boardingStop,
+        alightingStop,
+        discountType,
       });
       const discountMessage = reservation.pointsSpent
         ? t("route.discountUsed", {
@@ -100,6 +181,9 @@ const RouteBlock = ({
       await onReservationSuccess?.();
       setSeats(1);
       setUsePointsDiscount(false);
+      setBoardingStop(route.origin);
+      setAlightingStop(route.destination);
+      setDiscountType("NONE");
     } catch (error: unknown) {
       toast.error(getReservationValidationMessage(error) ?? t("route.bookingError"));
     } finally {
@@ -142,17 +226,70 @@ const RouteBlock = ({
 
       <div className={styles["reservation-section"]}>
         <div className={styles["seats-input"]}>
+          <label htmlFor={`boarding-${route.id}`}>{t("route.boardingStop")}:</label>
+          <select
+            id={`boarding-${route.id}`}
+            value={boardingStop}
+            onChange={(event) => handleBoardingStopChange(event.target.value)}
+            disabled={!isAuthenticated || isLoading}
+          >
+            {routePath.slice(0, -1).map((stop) => (
+              <option key={`${route.id}-boarding-${stop}`} value={stop}>
+                {stop}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={styles["seats-input"]}>
+          <label htmlFor={`alighting-${route.id}`}>{t("route.alightingStop")}:</label>
+          <select
+            id={`alighting-${route.id}`}
+            value={alightingStop}
+            onChange={(event) => setAlightingStop(event.target.value)}
+            disabled={!isAuthenticated || isLoading}
+          >
+            {alightingOptions.map((stop) => (
+              <option key={`${route.id}-alighting-${stop}`} value={stop}>
+                {stop}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={styles["seats-input"]}>
+          <label htmlFor={`discount-${route.id}`}>{t("route.discountType")}:</label>
+          <select
+            id={`discount-${route.id}`}
+            value={discountType}
+            onChange={(event) =>
+              setDiscountType(event.target.value as "NONE" | "STUDENT" | "CHILD_UNDER_5")
+            }
+            disabled={!isAuthenticated || isLoading}
+          >
+            <option value="NONE">{t("route.discountNone")}</option>
+            <option value="STUDENT">{t("route.discountStudent")}</option>
+            <option value="CHILD_UNDER_5">{t("route.discountChild")}</option>
+          </select>
+        </div>
+        <div className={styles["seats-input"]}>
           <label htmlFor={`seats-${route.id}`}>{t("route.seats")}:</label>
           <input
             id={`seats-${route.id}`}
             type="number"
             min="1"
+            max={availableSeats ?? undefined}
             value={seats}
             onChange={(e) =>
               setSeats(Math.max(1, parseInt(e.target.value) || 1))
             }
             disabled={!isAuthenticated || isLoading}
           />
+          {availableSeats !== null && (
+            <small>
+              {availableSeats > 0
+                ? t("route.availableSeats", { seats: availableSeats })
+                : t("route.noSeats")}
+            </small>
+          )}
         </div>
         <div className={styles["discount-control"]}>
           <button
@@ -172,9 +309,9 @@ const RouteBlock = ({
           </small>
         </div>
         <div className={styles["price-summary"]}>
-          {usePointsDiscount && (
+          {hasAnyDiscount && (
             <span className={styles["regular-price"]}>
-              {regularTotal.toFixed(2)} PLN
+              {displayedOriginalTotal.toFixed(2)} PLN
             </span>
           )}
           <strong>{finalTotal.toFixed(2)} PLN</strong>
@@ -182,12 +319,22 @@ const RouteBlock = ({
         <button
           className={styles["reserve-button"]}
           onClick={handleReservation}
-          disabled={!isAuthenticated || isLoading || hasDeparted}
+          disabled={
+            !isAuthenticated ||
+            isLoading ||
+            hasDeparted ||
+            hasNoSeats ||
+            exceedsAvailableSeats
+          }
           title={
             hasDeparted
               ? t("route.finished")
               : !isAuthenticated
                 ? t("route.loginRequired")
+                : hasNoSeats
+                  ? t("route.noSeats")
+                  : exceedsAvailableSeats
+                    ? t("route.tooManySeats")
                 : ""
           }
         >

@@ -22,9 +22,11 @@ import AdminSchedulesPage from "../pages/AdminSchedulesPage/AdminSchedulesPage";
 import AdminUserRolesPage from "../pages/AdminUserRolesPage/AdminUserRolesPage";
 import DepositPage from "../pages/DepositPage/DepositPage.tsx";
 import EmployeeSchedulePage from "../pages/EmployeeSchedulePage/EmployeeSchedulePage";
+import DriverPassengerListPage from "../pages/DriverPassengerListPage/DriverPassengerListPage";
 import RouteCreatePage from "../pages/RouteCreatePage/RouteCreatePage";
 import ReportsPage from "../pages/ReportsPage/ReportsPage";
 import LoyaltyPage from "../pages/LoyaltyPage/LoyaltyPage";
+import CompanyPage from "../pages/CompanyPage/CompanyPage";
 
 const App: React.FC = () => {
   return (
@@ -33,13 +35,10 @@ const App: React.FC = () => {
       <div className="container">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/company" element={<CompanyPage />} />
           <Route
             path="/route-search"
-            element={
-              <PrivateRoute>
-                <RouteSearchPage />
-              </PrivateRoute>
-            }
+            element={<RouteSearchPage />}
           />
           <Route
             path="/add-transaction"
@@ -82,6 +81,14 @@ const App: React.FC = () => {
             element={
               <EmployeeRoute>
                 <EmployeeSchedulePage />
+              </EmployeeRoute>
+            }
+          />
+          <Route
+            path="/driver/passengers"
+            element={
+              <EmployeeRoute>
+                <DriverPassengerListPage />
               </EmployeeRoute>
             }
           />

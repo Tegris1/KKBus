@@ -45,6 +45,26 @@
       gap: 1.5rem;
     }
 
+    .role-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-left: 0.4rem;
+      padding-left: 1.4rem;
+      position: relative;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 1px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.35);
+        transform: translateY(-50%);
+      }
+    }
+
     li {
       position: relative;
 
@@ -130,6 +150,11 @@
       gap: 1rem;
       .nav-container {
         gap: 0.8rem;
+      }
+      .role-links {
+        gap: 0.8rem;
+        margin-left: 0.2rem;
+        padding-left: 0.9rem;
       }
       li a {
         font-size: 0.85rem;

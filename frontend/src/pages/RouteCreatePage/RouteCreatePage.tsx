@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { routesApi } from "../../api/routesApi";
 import { usersApi } from "../../api/usersApi";
 import { useLanguage } from "../../context/LanguageContext";
-import { RouteRequest } from "../../types/route";
+import { Route, RouteRequest } from "../../types/route";
 import { DriverOption } from "../../types/user";
 import styles from "./RouteCreatePage.module.scss";
 
@@ -19,22 +19,43 @@ const EMPTY_ROUTE: RouteRequest = {
   fuelCost: 0,
 };
 
+const toDateTimeLocal = (value: string) => value.slice(0, 16);
+
+const toRouteRequest = (route: Route): RouteRequest => ({
+  origin: route.origin,
+  destination: route.destination,
+  departureTime: toDateTimeLocal(route.departureTime),
+  arrivalTime: toDateTimeLocal(route.arrivalTime),
+  intermediateStops: route.intermediateStops ?? [],
+  price: route.price,
+  driverId: route.driverId,
+  busId: route.busId,
+  fuelCost: route.fuelCost,
+});
+
 const RouteCreatePage = () => {
   const { t } = useLanguage();
   const [form, setForm] = useState<RouteRequest>(EMPTY_ROUTE);
   const [saving, setSaving] = useState(false);
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [editingRouteId, setEditingRouteId] = useState<number | null>(null);
   const [drivers, setDrivers] = useState<DriverOption[]>([]);
 
   useEffect(() => {
-    const loadDrivers = async () => {
+    const loadData = async () => {
       try {
-        setDrivers(await usersApi.getDrivers());
+        const [driverData, routeData] = await Promise.all([
+          usersApi.getDrivers(),
+          routesApi.getAllRoutes(),
+        ]);
+        setDrivers(driverData);
+        setRoutes(routeData);
       } catch {
-        toast.error(t("routeCreate.driversError"));
+        toast.error(t("routeCreate.loadError"));
       }
     };
 
-    void loadDrivers();
+    void loadData();
   }, [t]);
 
   const updateForm = <Key extends keyof RouteRequest>(
@@ -74,17 +95,27 @@ const RouteCreatePage = () => {
     setSaving(true);
 
     try {
-      await routesApi.createRoute({
+      const payload = {
         ...form,
         origin,
         destination,
         intermediateStops,
-      });
-      toast.success(t("routeCreate.success"));
+      };
+
+      if (editingRouteId === null) {
+        await routesApi.createRoute(payload);
+        toast.success(t("routeCreate.success"));
+      } else {
+        await routesApi.updateRoute(editingRouteId, payload);
+        toast.success(t("routeCreate.updateSuccess"));
+      }
+
       setForm(EMPTY_ROUTE);
+      setEditingRouteId(null);
+      setRoutes(await routesApi.getAllRoutes());
     } catch (error) {
-      console.error("Error creating route:", error);
-      toast.error(t("routeCreate.error"));
+      console.error("Error saving route:", error);
+      toast.error(t(editingRouteId === null ? "routeCreate.error" : "routeCreate.updateError"));
     } finally {
       setSaving(false);
     }
@@ -115,11 +146,26 @@ const RouteCreatePage = () => {
     }));
   };
 
+  const editRoute = (route: Route) => {
+    setEditingRouteId(route.id);
+    setForm(toRouteRequest(route));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelEdit = () => {
+    setEditingRouteId(null);
+    setForm(EMPTY_ROUTE);
+  };
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <p className={styles.label}>{t("routeCreate.section")}</p>
-        <h1>{t("routeCreate.title")}</h1>
+        <h1>
+          {editingRouteId === null
+            ? t("routeCreate.title")
+            : t("routeCreate.editTitle")}
+        </h1>
         <p>{t("routeCreate.subtitle")}</p>
       </header>
 
@@ -267,10 +313,56 @@ const RouteCreatePage = () => {
           />
         </div>
 
+        {editingRouteId !== null && (
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={cancelEdit}
+            disabled={saving}
+          >
+            {t("routeCreate.cancelEdit")}
+          </button>
+        )}
+
         <button type="submit" disabled={saving}>
-          {saving ? t("routeCreate.adding") : t("routeCreate.add")}
+          {saving
+            ? t("routeCreate.saving")
+            : editingRouteId === null
+              ? t("routeCreate.add")
+              : t("routeCreate.saveChanges")}
         </button>
       </form>
+
+      <section className={styles.routesSection}>
+        <header>
+          <h2>{t("routeCreate.existingRoutes")}</h2>
+          <p>{t("routeCreate.existingRoutesHint")}</p>
+        </header>
+
+        {routes.length === 0 ? (
+          <p className={styles.emptyStopsHint}>{t("routeCreate.noRoutes")}</p>
+        ) : (
+          <div className={styles.routesList}>
+            {routes.map((route) => (
+              <article key={route.id} className={styles.routeCard}>
+                <div>
+                  <h3>
+                    {route.origin} - {route.destination}
+                  </h3>
+                  <p>
+                    {toDateTimeLocal(route.departureTime).replace("T", " ")} |{" "}
+                    {t("routeCreate.bus")} {route.busId} |{" "}
+                    {t("routeCreate.price")} {route.price.toFixed(2)} PLN
+                  </p>
+                </div>
+                <button type="button" onClick={() => editRoute(route)}>
+                  {t("routeCreate.edit")}
+                </button>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </main>
   );
 };

@@ -9,6 +9,7 @@ import pasir.model.Reservation;
 import pasir.model.Route;
 import pasir.model.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +23,27 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Optional<Reservation> findByIdForUpdate(@Param("id") Long id);
 
     List<Reservation> findAllByRouteIn(List<Route> routes);
+
+    @Query("""
+            select reservation
+            from Reservation reservation
+            join fetch reservation.route route
+            join fetch reservation.user user
+            where route.driverId = :driverId
+            order by reservation.travelDepartureTime asc, route.departureTime asc, user.lastName asc, user.username asc
+            """)
+    List<Reservation> findDriverPassengerReservations(@Param("driverId") Long driverId);
+
+    @Query("""
+            select coalesce(sum(coalesce(reservation.seats, 1)), 0)
+            from Reservation reservation
+            where reservation.route = :route
+              and reservation.travelDepartureTime = :travelDepartureTime
+            """)
+    Long countReservedSeats(
+            @Param("route") Route route,
+            @Param("travelDepartureTime") LocalDateTime travelDepartureTime
+    );
 
     boolean existsByUserAndRoute(User user, Route route);
 
