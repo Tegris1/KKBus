@@ -43,6 +43,11 @@ const normalizeRoute = (route: RouteResponse): Route => ({
 });
 
 export const routesApi = {
+  getAllRoutes: async (): Promise<Route[]> => {
+    const response = await axiosClient.get<RouteResponse[]>("route");
+    return response.data.map(normalizeRoute);
+  },
+
   getRoutes: async (origin: string, destination: string): Promise<Route[]> => {
     const response = await axiosClient.get<RouteResponse[]>("route", {
       params: {
@@ -65,6 +70,11 @@ export const routesApi = {
 
   createRoute: async (route: RouteRequest): Promise<Route> => {
     const response = await axiosClient.post<RouteResponse>("route", route);
+    return normalizeRoute(response.data);
+  },
+
+  updateRoute: async (id: number, route: RouteRequest): Promise<Route> => {
+    const response = await axiosClient.put<RouteResponse>(`route/${id}`, route);
     return normalizeRoute(response.data);
   },
 };

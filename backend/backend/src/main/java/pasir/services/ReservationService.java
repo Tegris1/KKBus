@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 @AllArgsConstructor
@@ -422,7 +423,7 @@ public class ReservationService {
     private String passengerName(User passenger) {
         String fullName = String.join(
                 " ",
-                List.of(passenger.getFirstName(), passenger.getLastName()).stream()
+                Stream.of(passenger.getFirstName(), passenger.getLastName())
                         .filter(value -> value != null && !value.isBlank())
                         .toList()
         ).trim();

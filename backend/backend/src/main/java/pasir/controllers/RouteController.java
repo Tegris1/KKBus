@@ -19,7 +19,7 @@ import java.util.List;
 public class RouteController {
     private final RouteService routeService;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE', 'SECRETARY')")
     @PostMapping
     public ResponseEntity<Route> createRoute(@Valid @RequestBody RouteDto routeDto) {
         Route newRoute = routeService.createRoute(routeDto);
@@ -36,9 +36,9 @@ public class RouteController {
         return ResponseEntity.ok(routeService.findAllByDestinationAndOrigin(destination, origin));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping
-    public ResponseEntity<Route> updateRoute(@Valid @RequestBody RouteDto routeDto, @Valid @RequestBody Long id) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY')")
+    @PutMapping("/{id}")
+    public ResponseEntity<Route> updateRoute(@PathVariable Long id, @Valid @RequestBody RouteDto routeDto) {
         Route updatedRoute = routeService.updateRoute(routeDto, id);
         if(updatedRoute == null) {return ResponseEntity.notFound().build();}
         return ResponseEntity.ok().body(updatedRoute);

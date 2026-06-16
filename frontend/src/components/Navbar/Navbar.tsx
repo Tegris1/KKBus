@@ -34,9 +34,14 @@ const Navbar: React.FC = () => {
                 <Link to="/loyalty">{t("nav.rewards")}</Link>
               </li>
               {isEmployee && (
-                <li>
-                  <Link to="/employee-schedule">{t("nav.schedule")}</Link>
-                </li>
+                <>
+                  <li>
+                    <Link to="/employee-schedule">{t("nav.schedule")}</Link>
+                  </li>
+                  <li>
+                    <Link to="/driver/passengers">{t("nav.passengerLists")}</Link>
+                  </li>
+                </>
               )}
               {isAdmin && (
                 <>

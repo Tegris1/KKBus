@@ -22,6 +22,7 @@ import AdminSchedulesPage from "../pages/AdminSchedulesPage/AdminSchedulesPage";
 import AdminUserRolesPage from "../pages/AdminUserRolesPage/AdminUserRolesPage";
 import DepositPage from "../pages/DepositPage/DepositPage.tsx";
 import EmployeeSchedulePage from "../pages/EmployeeSchedulePage/EmployeeSchedulePage";
+import DriverPassengerListPage from "../pages/DriverPassengerListPage/DriverPassengerListPage";
 import RouteCreatePage from "../pages/RouteCreatePage/RouteCreatePage";
 import ReportsPage from "../pages/ReportsPage/ReportsPage";
 import LoyaltyPage from "../pages/LoyaltyPage/LoyaltyPage";
@@ -80,6 +81,14 @@ const App: React.FC = () => {
             element={
               <EmployeeRoute>
                 <EmployeeSchedulePage />
+              </EmployeeRoute>
+            }
+          />
+          <Route
+            path="/driver/passengers"
+            element={
+              <EmployeeRoute>
+                <DriverPassengerListPage />
               </EmployeeRoute>
             }
           />

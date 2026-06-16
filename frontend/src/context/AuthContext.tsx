@@ -115,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const isEmployee = roles.includes("EMPLOYEE");
   const isSecretary = roles.includes("SECRETARY");
   const isAdmin = roles.includes("ADMIN");
-  const canManageRoutes = isAdmin || isEmployee;
+  const canManageRoutes = isAdmin || isEmployee || isSecretary;
 
   const value = useMemo(
     () => ({
