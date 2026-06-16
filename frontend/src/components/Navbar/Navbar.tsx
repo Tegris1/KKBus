@@ -16,11 +16,14 @@ const Navbar: React.FC = () => {
       </h1>
       <ul className={styles["nav-list"]}>
         <div className={styles["nav-container"]}>
+          <li>
+            <Link to="/company">{t("nav.company")}</Link>
+          </li>
+          <li>
+            <Link to="/route-search">{t("nav.search")}</Link>
+          </li>
           {isAuthenticated && (
             <>
-              <li>
-                <Link to="/route-search">{t("nav.search")}</Link>
-              </li>
               <li>
                 <Link to="/my-tickets">{t("nav.tickets")}</Link>
               </li>

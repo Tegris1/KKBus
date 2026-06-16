@@ -11,6 +11,7 @@ import pasir.dtos.ReservationTicketDto;
 import pasir.model.Reservation;
 import pasir.model.Route;
 import pasir.model.TransactionType;
+import pasir.model.TicketDiscountType;
 import pasir.model.User;
 import pasir.model.Wallet;
 import pasir.repositories.ReservationRepository;
@@ -22,6 +23,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 @AllArgsConstructor
@@ -78,7 +80,8 @@ public class ReservationService {
     }
 
     private Reservation createRouteReservation(ReservationDto reservationDto) {
-        User user = getCurrentUser();
+        User currentUser = getCurrentUser();
+        User user = resolveReservationUser(reservationDto, currentUser);
         Route route = routeRepository.findById(reservationDto.getRouteId())
                 .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono trasy o ID " + reservationDto.getRouteId()));
 
@@ -90,8 +93,11 @@ public class ReservationService {
         if (travelDepartureTime == null || !weeklyRouteService.isValidOccurrence(route, travelDepartureTime)) {
             throw new IllegalArgumentException("Nieprawidlowy termin kursu tygodniowego");
         }
-        if (!travelDepartureTime.isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Nie mozna zarezerwowac zakonczonego kursu");
+        if (!travelDepartureTime.isAfter(LocalDateTime.now().plusHours(2))) {
+            throw new IllegalArgumentException("Rezerwacje mozna utworzyc najpozniej 2 godziny przed kursem");
+        }
+        if (travelDepartureTime.isAfter(LocalDateTime.now().plusWeeks(1))) {
+            throw new IllegalArgumentException("Rezerwacje mozna skladac maksymalnie tydzien naprzod");
         }
         var occurrence = weeklyRouteService.occurrencesBetween(
                 route,
@@ -101,7 +107,11 @@ public class ReservationService {
                 () -> new IllegalArgumentException("Nieprawidlowy termin kursu tygodniowego")
         );
 
-        BigDecimal totalPrice = route.getPrice().multiply(BigDecimal.valueOf(seats));
+        String boardingStop = normalizeStop(reservationDto.getBoardingStop(), route.getOrigin());
+        String alightingStop = normalizeStop(reservationDto.getAlightingStop(), route.getDestination());
+        BigDecimal basePrice = calculateSegmentPrice(route, boardingStop, alightingStop);
+        BigDecimal discountedPrice = applyPassengerDiscount(basePrice, reservationDto.getDiscountType());
+        BigDecimal totalPrice = discountedPrice.multiply(BigDecimal.valueOf(seats));
         Wallet wallet = getOrCreateWalletForUpdate(user);
         boolean usePointsDiscount = Boolean.TRUE.equals(reservationDto.getUsePointsDiscount());
         BigDecimal discountAmount = BigDecimal.ZERO;
@@ -137,7 +147,7 @@ public class ReservationService {
         reservation.setAmount(priceToPay.doubleValue());
         reservation.setType(TransactionType.EXPENSE);
         reservation.setTags("BILET");
-        reservation.setNotes(route.getOrigin() + " -> " + route.getDestination());
+        reservation.setNotes(boardingStop + " -> " + alightingStop);
         reservation.setTimestamp(LocalDateTime.now());
         reservation.setUser(user);
         reservation.setRoute(route);
@@ -145,6 +155,11 @@ public class ReservationService {
         reservation.setAwardedPoints(awardedPoints);
         reservation.setPointsSpent(pointsSpent);
         reservation.setDiscountAmount(discountAmount);
+        reservation.setBoardingStop(boardingStop);
+        reservation.setAlightingStop(alightingStop);
+        reservation.setDiscountType(reservationDto.getDiscountType() == null
+                ? TicketDiscountType.NONE
+                : reservationDto.getDiscountType());
         reservation.setTravelDepartureTime(occurrence.departureTime());
         reservation.setTravelArrivalTime(occurrence.arrivalTime());
 
@@ -180,6 +195,61 @@ public class ReservationService {
             return;
         }
         reservationRepository.deleteById(id);
+    }
+
+    private User resolveReservationUser(ReservationDto dto, User currentUser) {
+        if (dto.getPassengerUserId() == null || dto.getPassengerUserId().equals(currentUser.getId())) {
+            return currentUser;
+        }
+        var role = currentUser.getRole();
+        if (role != pasir.model.Role.SECRETARY && role != pasir.model.Role.ADMIN) {
+            throw new AccessDeniedException("Tylko sekretariat moze rezerwowac dla innego klienta");
+        }
+        return userRepository.findById(dto.getPassengerUserId())
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono klienta o ID " + dto.getPassengerUserId()));
+    }
+
+    private String normalizeStop(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value.trim();
+    }
+
+    private BigDecimal calculateSegmentPrice(Route route, String boardingStop, String alightingStop) {
+        List<String> stops = new ArrayList<>();
+        stops.add(route.getOrigin());
+        stops.addAll(route.getIntermediateStops());
+        stops.add(route.getDestination());
+
+        int from = stops.indexOf(boardingStop);
+        int to = stops.indexOf(alightingStop);
+        if (from < 0 || to < 0 || to <= from) {
+            throw new IllegalArgumentException("Nieprawidlowy odcinek przejazdu");
+        }
+
+        if (stops.size() <= 2) {
+            return route.getPrice();
+        }
+
+        int segmentCount = stops.size() - 1;
+        int selectedSegments = to - from;
+        BigDecimal minPrice = new BigDecimal("12.00");
+        BigDecimal maxPrice = route.getPrice() == null ? new BigDecimal("15.00") : route.getPrice();
+        if (maxPrice.compareTo(minPrice) < 0) {
+            return maxPrice;
+        }
+        return minPrice.add(
+                maxPrice.subtract(minPrice)
+                        .multiply(BigDecimal.valueOf(selectedSegments))
+                        .divide(BigDecimal.valueOf(segmentCount), 2, RoundingMode.HALF_UP)
+        );
+    }
+
+    private BigDecimal applyPassengerDiscount(BigDecimal price, TicketDiscountType discountType) {
+        TicketDiscountType type = discountType == null ? TicketDiscountType.NONE : discountType;
+        return switch (type) {
+            case CHILD_UNDER_5 -> BigDecimal.ZERO;
+            case STUDENT -> price.multiply(new BigDecimal("0.70")).setScale(2, RoundingMode.HALF_UP);
+            case NONE -> price;
+        };
     }
 
     private Wallet getOrCreateWalletForUpdate(User user) {

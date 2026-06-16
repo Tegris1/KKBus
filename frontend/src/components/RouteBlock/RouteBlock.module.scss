@@ -104,12 +104,13 @@
         font-size: 0.9em;
       }
 
-      input {
+      input,
+      select {
         padding: 8px;
         border: 1px solid #ddd;
         border-radius: 4px;
         font-size: 1em;
-        width: 80px;
+        min-width: 80px;
 
         &:disabled {
           background-color: #f0f0f0;

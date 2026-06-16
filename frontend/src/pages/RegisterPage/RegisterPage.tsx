@@ -11,6 +11,11 @@ const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [username, setUsername] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [birthDate, setBirthDate] = useState<string>("");
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [loyaltyProgram, setLoyaltyProgram] = useState<boolean>(true);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
@@ -21,6 +26,18 @@ const RegisterPage: React.FC = () => {
 
     if (!username.trim()) {
       newErrors.username = t("auth.usernameRequired");
+    }
+    if (!firstName.trim()) {
+      newErrors.firstName = t("auth.firstNameRequired");
+    }
+    if (!lastName.trim()) {
+      newErrors.lastName = t("auth.lastNameRequired");
+    }
+    if (!birthDate) {
+      newErrors.birthDate = t("auth.birthDateRequired");
+    }
+    if (!phoneNumber.trim()) {
+      newErrors.phoneNumber = t("auth.phoneNumberRequired");
     }
     if (!email.trim()) {
       newErrors.email = t("auth.emailRequired");
@@ -49,7 +66,16 @@ const RegisterPage: React.FC = () => {
     if (!validate()) return;
 
     try {
-      await authApi.register({ username, email, password });
+      await authApi.register({
+        username,
+        email,
+        password,
+        firstName,
+        lastName,
+        birthDate,
+        phoneNumber,
+        loyaltyProgram,
+      });
       alert(t("auth.registrationSuccess"));
       navigate("/login");
     } catch (requestError) {
@@ -94,6 +120,60 @@ const RegisterPage: React.FC = () => {
                 className={styles.input}
               />
               {errors.username && <ErrorMessage message={errors.username} />}
+            </div>
+            <div className={styles.formGroup}>
+              <label>{t("auth.firstName")}:</label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                className={styles.input}
+              />
+              {errors.firstName && <ErrorMessage message={errors.firstName} />}
+            </div>
+            <div className={styles.formGroup}>
+              <label>{t("auth.lastName")}:</label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                className={styles.input}
+              />
+              {errors.lastName && <ErrorMessage message={errors.lastName} />}
+            </div>
+            <div className={styles.formGroup}>
+              <label>{t("auth.birthDate")}:</label>
+              <input
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                required
+                className={styles.input}
+              />
+              {errors.birthDate && <ErrorMessage message={errors.birthDate} />}
+            </div>
+            <div className={styles.formGroup}>
+              <label>{t("auth.phoneNumber")}:</label>
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                required
+                className={styles.input}
+              />
+              {errors.phoneNumber && <ErrorMessage message={errors.phoneNumber} />}
+            </div>
+            <div className={styles.formGroup}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={loyaltyProgram}
+                  onChange={(e) => setLoyaltyProgram(e.target.checked)}
+                />{" "}
+                {t("auth.loyaltyOptIn")}
+              </label>
             </div>
             <div className={styles.formGroup}>
               <label>{t("auth.email")}:</label>

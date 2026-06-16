@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 public class UserDto {
@@ -18,4 +20,10 @@ public class UserDto {
 
     @NotBlank
     private String password;
+
+    private String firstName;
+    private String lastName;
+    private LocalDate birthDate;
+    private String phoneNumber;
+    private Boolean loyaltyProgram = true;
 }

@@ -25,6 +25,7 @@ import EmployeeSchedulePage from "../pages/EmployeeSchedulePage/EmployeeSchedule
 import RouteCreatePage from "../pages/RouteCreatePage/RouteCreatePage";
 import ReportsPage from "../pages/ReportsPage/ReportsPage";
 import LoyaltyPage from "../pages/LoyaltyPage/LoyaltyPage";
+import CompanyPage from "../pages/CompanyPage/CompanyPage";
 
 const App: React.FC = () => {
   return (
@@ -33,13 +34,10 @@ const App: React.FC = () => {
       <div className="container">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/company" element={<CompanyPage />} />
           <Route
             path="/route-search"
-            element={
-              <PrivateRoute>
-                <RouteSearchPage />
-              </PrivateRoute>
-            }
+            element={<RouteSearchPage />}
           />
           <Route
             path="/add-transaction"

@@ -34,6 +34,10 @@ public class Reservation {
     private Integer pointsSpent = 0;
     @Column(precision = 19, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;
+    private String boardingStop;
+    private String alightingStop;
+    @Enumerated(EnumType.STRING)
+    private TicketDiscountType discountType = TicketDiscountType.NONE;
     private LocalDateTime travelDepartureTime;
     private LocalDateTime travelArrivalTime;
 

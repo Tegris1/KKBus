@@ -9,6 +9,8 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @Entity
@@ -34,6 +36,13 @@ public class User {
     private String currency = "PLN";
 
     private Integer Points;
+
+    private String firstName;
+    private String lastName;
+    private LocalDate birthDate;
+    private String phoneNumber;
+    private String customerNumber;
+    private boolean loyaltyProgram = true;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
