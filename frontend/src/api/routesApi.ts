@@ -12,6 +12,9 @@ interface RouteResponse {
   driverId: number;
   busId: number;
   fuelCost: number | string | null;
+  busSeats?: number | null;
+  reservedSeats?: number | null;
+  availableSeats?: number | null;
   reservation?: unknown;
 }
 
@@ -33,6 +36,9 @@ const normalizeRoute = (route: RouteResponse): Route => ({
   driverId: route.driverId,
   busId: route.busId,
   fuelCost: Number(route.fuelCost ?? 0),
+  busSeats: route.busSeats ?? null,
+  reservedSeats: route.reservedSeats ?? null,
+  availableSeats: route.availableSeats ?? null,
   reservation: route.reservation,
 });
 

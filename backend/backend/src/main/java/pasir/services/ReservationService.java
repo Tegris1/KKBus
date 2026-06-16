@@ -8,15 +8,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pasir.dtos.ReservationDto;
 import pasir.dtos.ReservationTicketDto;
+import pasir.dtos.DriverPassengerCourseDto;
+import pasir.dtos.DriverPassengerReservationDto;
 import pasir.model.Reservation;
 import pasir.model.Route;
 import pasir.model.TransactionType;
 import pasir.model.TicketDiscountType;
 import pasir.model.User;
+import pasir.model.Vehicle;
 import pasir.model.Wallet;
 import pasir.repositories.ReservationRepository;
 import pasir.repositories.RouteRepository;
 import pasir.repositories.UserRepository;
+import pasir.repositories.VehicleRepository;
 import pasir.repositories.WalletRepository;
 
 import java.math.BigDecimal;
@@ -24,6 +28,8 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -34,6 +40,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final RouteRepository routeRepository;
+    private final VehicleRepository vehicleRepository;
     private final WalletRepository walletRepository;
     private final WeeklyRouteService weeklyRouteService;
 
@@ -82,7 +89,8 @@ public class ReservationService {
     private Reservation createRouteReservation(ReservationDto reservationDto) {
         User currentUser = getCurrentUser();
         User user = resolveReservationUser(reservationDto, currentUser);
-        Route route = routeRepository.findById(reservationDto.getRouteId())
+        validateReservationBlock(user);
+        Route route = routeRepository.findByIdForUpdate(reservationDto.getRouteId())
                 .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono trasy o ID " + reservationDto.getRouteId()));
 
         int seats = reservationDto.getSeats() == null ? 1 : reservationDto.getSeats();
@@ -106,6 +114,7 @@ public class ReservationService {
         ).stream().findFirst().orElseThrow(
                 () -> new IllegalArgumentException("Nieprawidlowy termin kursu tygodniowego")
         );
+        validateSeatAvailability(route, occurrence.departureTime(), seats);
 
         String boardingStop = normalizeStop(reservationDto.getBoardingStop(), route.getOrigin());
         String alightingStop = normalizeStop(reservationDto.getAlightingStop(), route.getDestination());
@@ -164,6 +173,31 @@ public class ReservationService {
         reservation.setTravelArrivalTime(occurrence.arrivalTime());
 
         return reservationRepository.save(reservation);
+    }
+
+    private void validateSeatAvailability(Route route, LocalDateTime travelDepartureTime, int requestedSeats) {
+        if (route.getBusId() == null) {
+            throw new IllegalArgumentException("Kurs nie ma przypisanego autobusu");
+        }
+
+        Vehicle vehicle = vehicleRepository.findByFleetNumber(route.getBusId())
+                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono autobusu przypisanego do kursu"));
+        int capacity = vehicle.getSeats() == null ? 0 : vehicle.getSeats();
+        long reservedSeats = reservationRepository.countReservedSeats(route, travelDepartureTime);
+        long availableSeats = capacity - reservedSeats;
+
+        if (requestedSeats > availableSeats) {
+            throw new IllegalArgumentException(
+                    "Brak wystarczajacej liczby miejsc. Dostepne miejsca: " + Math.max(availableSeats, 0)
+            );
+        }
+    }
+
+    private void validateReservationBlock(User user) {
+        LocalDateTime blockedUntil = user.getReservationBlockedUntil();
+        if (blockedUntil != null && blockedUntil.isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Mozliwosc rezerwacji jest zablokowana do " + blockedUntil);
+        }
     }
 
     private Wallet getOrCreateWallet(User user) {
@@ -273,7 +307,7 @@ public class ReservationService {
         LocalDateTime departureTime = reservation.getTravelDepartureTime() == null
                 ? reservation.getRoute().getDepartureTime()
                 : reservation.getTravelDepartureTime();
-        if (!departureTime.isAfter(LocalDateTime.now().plusHours(24))) {
+        if (departureTime.isBefore(LocalDateTime.now().plusHours(24))) {
             throw new IllegalArgumentException("Rezerwacje mozna anulowac najpozniej 24 godziny przed odjazdem");
         }
 
@@ -287,6 +321,17 @@ public class ReservationService {
         wallet.setPoints(updatedPoints);
         currentUser.setPoints(updatedPoints);
         walletRepository.save(wallet);
+        int cancelledReservations = currentUser.getCancelledReservationsCount() == null
+                ? 0
+                : currentUser.getCancelledReservationsCount();
+        cancelledReservations++;
+        if (cancelledReservations >= 3) {
+            currentUser.setCancelledReservationsCount(0);
+            currentUser.setReservationBlockedUntil(LocalDateTime.now().plusMonths(1));
+        } else {
+            currentUser.setCancelledReservationsCount(cancelledReservations);
+        }
+        userRepository.save(currentUser);
         reservationRepository.delete(reservation);
     }
 
@@ -312,5 +357,80 @@ public class ReservationService {
         return reservationRepository.findAllByUserAndRouteIsNotNull(user).stream()
                 .map(ReservationTicketDto::from)
                 .toList();
+    }
+
+    public List<DriverPassengerCourseDto> getDriverPassengerLists() {
+        User driver = getCurrentUser();
+        Map<String, List<Reservation>> reservationsByCourse = new LinkedHashMap<>();
+
+        reservationRepository.findDriverPassengerReservations(driver.getId()).forEach(reservation -> {
+            LocalDateTime departureTime = getReservationDepartureTime(reservation);
+            String key = reservation.getRoute().getId() + "|" + departureTime;
+            reservationsByCourse.computeIfAbsent(key, ignored -> new ArrayList<>()).add(reservation);
+        });
+
+        return reservationsByCourse.values().stream()
+                .map(this::toDriverPassengerCourseDto)
+                .toList();
+    }
+
+    private DriverPassengerCourseDto toDriverPassengerCourseDto(List<Reservation> reservations) {
+        Reservation firstReservation = reservations.getFirst();
+        Route route = firstReservation.getRoute();
+        Integer totalSeats = route.getBusId() == null
+                ? null
+                : vehicleRepository.findByFleetNumber(route.getBusId())
+                        .map(Vehicle::getSeats)
+                        .orElse(null);
+
+        return new DriverPassengerCourseDto(
+                route.getId(),
+                route.getOrigin(),
+                route.getDestination(),
+                getReservationDepartureTime(firstReservation),
+                firstReservation.getTravelArrivalTime() == null
+                        ? route.getArrivalTime()
+                        : firstReservation.getTravelArrivalTime(),
+                route.getBusId(),
+                totalSeats,
+                reservations.stream()
+                        .map(this::toDriverPassengerReservationDto)
+                        .toList()
+        );
+    }
+
+    private DriverPassengerReservationDto toDriverPassengerReservationDto(Reservation reservation) {
+        User passenger = reservation.getUser();
+        return new DriverPassengerReservationDto(
+                reservation.getId(),
+                passengerName(passenger),
+                passenger.getEmail(),
+                passenger.getPhoneNumber(),
+                reservation.getSeats() == null ? 1 : reservation.getSeats(),
+                reservation.getBoardingStop(),
+                reservation.getAlightingStop(),
+                reservation.getDiscountType() == null ? null : reservation.getDiscountType().name()
+        );
+    }
+
+    private LocalDateTime getReservationDepartureTime(Reservation reservation) {
+        return reservation.getTravelDepartureTime() == null
+                ? reservation.getRoute().getDepartureTime()
+                : reservation.getTravelDepartureTime();
+    }
+
+    private String passengerName(User passenger) {
+        String fullName = String.join(
+                " ",
+                List.of(passenger.getFirstName(), passenger.getLastName()).stream()
+                        .filter(value -> value != null && !value.isBlank())
+                        .toList()
+        ).trim();
+
+        if (!fullName.isBlank()) {
+            return fullName;
+        }
+
+        return passenger.getUsername();
     }
 }

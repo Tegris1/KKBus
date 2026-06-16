@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import pasir.dtos.DriverPassengerCourseDto;
 import pasir.dtos.ReservationDto;
 import pasir.dtos.ReservationTicketDto;
 import pasir.model.Reservation;
@@ -35,6 +36,12 @@ public class ReservationController {
     @GetMapping("/reservations")
     public ResponseEntity<List<ReservationTicketDto>> getRouteReservations(){
         return ResponseEntity.ok(reservationService.getRouteReservations());
+    }
+
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    @GetMapping("/driver/passenger-lists")
+    public ResponseEntity<List<DriverPassengerCourseDto>> getDriverPassengerLists() {
+        return ResponseEntity.ok(reservationService.getDriverPassengerLists());
     }
 
     @PutMapping("/transactions/{id}")

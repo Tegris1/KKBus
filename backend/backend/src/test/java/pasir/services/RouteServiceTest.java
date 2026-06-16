@@ -9,11 +9,14 @@ import pasir.dtos.RouteDto;
 import pasir.model.Role;
 import pasir.model.Route;
 import pasir.model.User;
+import pasir.model.Vehicle;
+import pasir.repositories.ReservationRepository;
 import pasir.repositories.RouteRepository;
 import pasir.repositories.UserRepository;
+import pasir.repositories.VehicleRepository;
 
-import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,33 +34,42 @@ class RouteServiceTest {
     private RouteMapper routeMapper;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private VehicleRepository vehicleRepository;
+    @Mock
+    private ReservationRepository reservationRepository;
 
     @Test
-    void historicalRouteIsReturnedAsNextWeeklyOccurrence() {
+    void historicalRouteIsReturnedAsNextWeeklyOccurrenceWithAvailableSeats() {
         Route route = new Route();
         route.setId(1L);
-        route.setOrigin("Kraków");
+        route.setOrigin("Krakow");
         route.setDestination("Warszawa");
         route.setDepartureTime(LocalDateTime.of(2026, 5, 10, 8, 0));
         route.setArrivalTime(LocalDateTime.of(2026, 5, 10, 10, 30));
+        route.setBusId((short) 101);
 
-        when(routeRepository.findByDestinationAndOriginOrderByDepartureTimeDesc("Warszawa", "Kraków"))
+        Vehicle vehicle = new Vehicle();
+        vehicle.setFleetNumber(route.getBusId());
+        vehicle.setSeats(20);
+
+        when(routeRepository.findByDestinationAndOriginOrderByDepartureTimeDesc("Warszawa", "Krakow"))
                 .thenReturn(List.of(route));
+        when(vehicleRepository.findByFleetNumber(route.getBusId())).thenReturn(Optional.of(vehicle));
+        when(reservationRepository.countReservedSeats(any(Route.class), any(LocalDateTime.class))).thenReturn(6L);
 
-        RouteService service = new RouteService(
-                routeRepository,
-                routeMapper,
-                userRepository,
-                new WeeklyRouteService()
-        );
+        RouteService service = service();
 
-        var result = service.findAllByDestinationAndOrigin("Warszawa", "Kraków");
+        var result = service.findAllByDestinationAndOrigin("Warszawa", "Krakow");
 
         assertEquals(1, result.size());
-        assertEquals("Kraków", result.getFirst().origin());
+        assertEquals("Krakow", result.getFirst().origin());
         assertEquals("Warszawa", result.getFirst().destination());
         assertEquals(8, result.getFirst().departureTime().getHour());
         assertEquals(7, result.getFirst().departureTime().getDayOfWeek().getValue());
+        assertEquals(20, result.getFirst().busSeats());
+        assertEquals(6L, result.getFirst().reservedSeats());
+        assertEquals(14, result.getFirst().availableSeats());
     }
 
     @Test
@@ -76,18 +88,22 @@ class RouteServiceTest {
         when(routeMapper.toEntity(dto)).thenReturn(mappedRoute);
         when(routeRepository.save(any(Route.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        RouteService service = new RouteService(
-                routeRepository,
-                routeMapper,
-                userRepository,
-                new WeeklyRouteService()
-        );
-
-        Route savedRoute = service.createRoute(dto);
+        Route savedRoute = service().createRoute(dto);
 
         assertEquals(3L, savedRoute.getDriverId());
         assertEquals((short) 101, savedRoute.getBusId());
         assertEquals(0, new BigDecimal("120.00").compareTo(savedRoute.getFuelCost()));
         verify(routeRepository).save(mappedRoute);
+    }
+
+    private RouteService service() {
+        return new RouteService(
+                routeRepository,
+                routeMapper,
+                userRepository,
+                vehicleRepository,
+                reservationRepository,
+                new WeeklyRouteService()
+        );
     }
 }

@@ -9,6 +9,9 @@ export interface Route {
   driverId: number;
   busId: number;
   fuelCost: number;
+  busSeats?: number | null;
+  reservedSeats?: number | null;
+  availableSeats?: number | null;
   reservation?: unknown;
 }
 

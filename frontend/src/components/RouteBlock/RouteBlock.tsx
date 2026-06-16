@@ -103,6 +103,9 @@ const RouteBlock = ({
   const displayedOriginalTotal = hasSegmentPriceChange ? fullRouteTotal : regularTotal;
   const canUseDiscount = availablePoints !== null && availablePoints >= 50;
   const hasDeparted = new Date(route.departureTime).getTime() <= Date.now();
+  const availableSeats = route.availableSeats ?? null;
+  const hasNoSeats = availableSeats !== null && availableSeats <= 0;
+  const exceedsAvailableSeats = availableSeats !== null && seats > availableSeats;
   const boardingStopIndex = routePath.indexOf(boardingStop);
   const alightingOptions = routePath.slice(Math.max(1, boardingStopIndex + 1));
 
@@ -140,6 +143,16 @@ const RouteBlock = ({
 
     if (!isAuthenticated) {
       toast.error(t("route.loginRequired"));
+      return;
+    }
+
+    if (hasNoSeats) {
+      toast.error(t("route.noSeats"));
+      return;
+    }
+
+    if (exceedsAvailableSeats) {
+      toast.error(t("route.tooManySeats"));
       return;
     }
 
@@ -263,12 +276,20 @@ const RouteBlock = ({
             id={`seats-${route.id}`}
             type="number"
             min="1"
+            max={availableSeats ?? undefined}
             value={seats}
             onChange={(e) =>
               setSeats(Math.max(1, parseInt(e.target.value) || 1))
             }
             disabled={!isAuthenticated || isLoading}
           />
+          {availableSeats !== null && (
+            <small>
+              {availableSeats > 0
+                ? t("route.availableSeats", { seats: availableSeats })
+                : t("route.noSeats")}
+            </small>
+          )}
         </div>
         <div className={styles["discount-control"]}>
           <button
@@ -298,12 +319,22 @@ const RouteBlock = ({
         <button
           className={styles["reserve-button"]}
           onClick={handleReservation}
-          disabled={!isAuthenticated || isLoading || hasDeparted}
+          disabled={
+            !isAuthenticated ||
+            isLoading ||
+            hasDeparted ||
+            hasNoSeats ||
+            exceedsAvailableSeats
+          }
           title={
             hasDeparted
               ? t("route.finished")
               : !isAuthenticated
                 ? t("route.loginRequired")
+                : hasNoSeats
+                  ? t("route.noSeats")
+                  : exceedsAvailableSeats
+                    ? t("route.tooManySeats")
                 : ""
           }
         >
